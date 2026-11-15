@@ -19,9 +19,17 @@ $current_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
     <div class="studio-subtitle">Enterprise Studio Analytics & Command Center</div>
     
     <div class="nav-grid">
-        <a href="/" class="nav-btn <?= ($current_uri == '/' || $current_uri == '/index') ? 'active' : '' ?>">📊 Dashboard</a>
-        <a href="/episodes" class="nav-btn <?= ($current_uri == '/episodes') ? 'active' : '' ?>">🎬 Episodes</a>
-        <a href="/add_edit" class="nav-btn <?= ($current_uri == '/add_edit') ? 'active' : '' ?>">➕ Add Episode</a>
-        <a href="/excel_studio" class="nav-btn <?= ($current_uri == '/excel_studio') ? 'active' : '' ?>">📂 Excel Studio</a>
+        <a href="/" class="nav-btn <?= ($current_uri == '/' || $current_uri == '/index' || $current_uri == '/index.php') ? 'active' : '' ?>">📊 Dashboard</a>
+        <a href="/episodes" class="nav-btn <?= ($current_uri == '/episodes' || $current_uri == '/episodes.php') ? 'active' : '' ?>">🎬 Episodes</a>
+        <a href="/add_edit" class="nav-btn <?= ($current_uri == '/add_edit' || $current_uri == '/add_edit.php') ? 'active' : '' ?>">➕ Add Episode</a>
+        <a href="/excel_studio" class="nav-btn <?= ($current_uri == '/excel_studio' || $current_uri == '/excel_studio.php') ? 'active' : '' ?>">📂 Excel Studio</a>
     </div>
 </div>
+
+<!-- JavaScript URL Cleaner: Automatically removes .php from address bar -->
+<script>
+    if (window.location.pathname.endsWith('.php')) {
+        let cleanPath = window.location.pathname.replace('.php', '');
+        window.history.replaceState({}, '', cleanPath + window.location.search);
+    }
+</script>
