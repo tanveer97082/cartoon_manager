@@ -25,11 +25,9 @@ if (isset($_POST['bulk_action']) && $_POST['bulk_action'] === 'delete_selected' 
     exit;
 }
 
-// Handle Export CSV Template Download (Clean & Error-Free)
+// Handle Export CSV Template Download
 if (isset($_GET['template'])) {
-    // Clear any output buffers to prevent HTML contamination
     if (ob_get_level()) ob_end_clean();
-    
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=cartoon_import_template.csv');
     
@@ -40,10 +38,9 @@ if (isset($_GET['template'])) {
     exit;
 }
 
-// Handle Export All to CSV (Clean & Error-Free)
+// Handle Export All to CSV
 if (isset($_GET['export_csv'])) {
     if (ob_get_level()) ob_end_clean();
-    
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=cartoon_studio_database.csv');
     
@@ -58,7 +55,7 @@ if (isset($_GET['export_csv'])) {
     exit;
 }
 
-// Handle CSV Import (Proper Excel Comma/Quote Parser)
+// Handle CSV Import
 $import_msg = "";
 if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
     $file = $_FILES['csv_file']['tmp_name'];
@@ -119,7 +116,7 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .search-input { flex-grow: 1; padding: 11px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 14px; min-width: 200px; }
         .search-input:focus { outline: none; border-color: var(--primary); }
 
-        .toolbar-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+        .toolbar-btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .tool-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
         .tool-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
 
@@ -155,102 +152,108 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="alert"><?= htmlspecialchars($import_msg) ?></div>
         <?php endif; ?>
 
-        <form method="POST" id="bulkForm">
-            <input type="hidden" name="bulk_action" id="bulkActionInput" value="">
+        <div class="toolbar">
+            <input type="text" id="searchBox" class="search-input" placeholder="🔍 Search series, season, title..." onkeyup="filterTable()">
             
-            <div class="toolbar">
-                <input type="text" id="searchBox" class="search-input" placeholder="🔍 Search series, season, title..." onkeyup="filterTable()">
-                <div class="toolbar-btns">
-                    <button type="submit" id="deleteBtn" onclick="submitBulk('delete_selected')" class="tool-btn" style="background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.4); color: #f87171;" disabled>🗑️ Delete Selected</button>
-                    <a href="episodes.php?template=true" class="tool-btn">📄 Template CSV</a>
-                    <a href="episodes.php?export_csv=true" class="tool-btn">📥 Export CSV</a>
-                    <label class="tool-btn" style="cursor: pointer;">
-                        📤 Import CSV <input type="file" name="csv_file" accept=".csv" onchange="this.form.method='POST'; this.form.action='episodes.php'; this.form.submit();" style="display:none;">
-                    </label>
-                </div>
-            </div>
+            <div class="toolbar-btns">
+                <!-- Bulk Delete Form -->
+                <form method="POST" id="bulkForm" style="display:inline;">
+                    <input type="hidden" name="bulk_action" value="delete_selected">
+                    <button type="submit" id="deleteBtn" onclick="return confirm('Delete selected episodes?');" class="tool-btn" style="background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.4); color: #f87171;" disabled>🗑️ Delete Selected</button>
+                </form>
 
-            <div class="table-responsive">
-                <table id="epTable">
-                    <thead>
-                        <tr>
-                            <th style="width: 30px;"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
-                            <th>Sr No</th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='series_asc')?'series_desc':'series_asc' ?>">
-                                    Series Name <span><?= ($sort=='series_asc')?'↑':(($sort=='series_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='season_asc')?'season_desc':'season_asc' ?>">
-                                    Season <span><?= ($sort=='season_asc')?'↑':(($sort=='season_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='ep_asc')?'ep_desc':'ep_asc' ?>">
-                                    Ep No <span><?= ($sort=='ep_asc')?'↑':(($sort=='ep_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='title_asc')?'title_desc':'title_asc' ?>">
-                                    Episode Title <span><?= ($sort=='title_asc')?'↑':(($sort=='title_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='status_asc')?'status_desc':'status_asc' ?>">
-                                    Status <span><?= ($sort=='status_asc')?'↑':(($sort=='status_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='target_asc')?'target_desc':'target_asc' ?>">
-                                    Target Date <span><?= ($sort=='target_asc')?'↑':(($sort=='target_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th>
-                                <a href="episodes.php?sort=<?= ($sort=='added_asc')?'added_desc':'added_asc' ?>">
-                                    Added Date <span><?= ($sort=='added_asc')?'↑':(($sort=='added_desc')?'↓':'↕') ?></span>
-                                </a>
-                            </th>
-                            <th style="text-align: right;">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if ($episodes): $sr = 1; foreach ($episodes as $ep): ?>
-                        <tr class="ep-row" data-search="<?= htmlspecialchars(strtolower($ep['series_name'].' '.$ep['season_name'].' '.$ep['episode_num'].' '.$ep['title'])) ?>">
-                            <td><input type="checkbox" name="selected_ids[]" value="<?= $ep['id'] ?>" onclick="checkSelection()"></td>
-                            <td><strong><?= $sr++ ?></strong></td>
-                            <td><span style="color: var(--accent); font-weight:650;"><?= htmlspecialchars($ep['series_name']) ?></span></td>
-                            <td><?= htmlspecialchars($ep['season_name']) ?></td>
-                            <td><strong style="color: #fff;"><?= htmlspecialchars($ep['episode_num']) ?></strong></td>
-                            <td style="font-weight:600;"><?= htmlspecialchars($ep['title']) ?></td>
-                            <td>
-                                <?php 
-                                    $st = $ep['status'] ?: 'Script Ready';
-                                    $bc = ($st == 'Published') ? 'status-pub' : (($st == 'In Production') ? 'status-prod' : 'status-ready');
-                                ?>
-                                <span class="badge <?= $bc ?>"><?= $st ?></span>
-                            </td>
-                            <td><span style="color: #fbbf24; font-weight:600;"><?= htmlspecialchars($ep['target_date'] ?: 'Not Set') ?></span></td>
-                            <td style="color: var(--muted); font-size: 11px;"><?= htmlspecialchars(substr($ep['created_at'], 0, 10)) ?></td>
-                            <td style="text-align: right;">
-                                <div class="dropdown">
-                                    <button type="button" class="dropbtn">Actions ▾</button>
-                                    <div class="dropdown-content">
-                                        <a href="add_edit.php?action=view&id=<?= $ep['id'] ?>">👁️ View</a>
-                                        <button type="button" onclick="copyMetadata(<?= htmlspecialchars(json_encode($ep)) ?>)">📋 Copy</button>
-                                        <a href="add_edit.php?action=edit&id=<?= $ep['id'] ?>">✏️ Edit</a>
-                                        <a href="episodes.php?action=delete&id=<?= $ep['id'] ?>" onclick="return confirm('Delete this episode?');" style="color:#f87171;">🗑️ Delete</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; else: ?>
-                        <tr><td colspan="10" style="text-align: center; color: var(--muted); padding: 30px;">No episodes found in database.</td></tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                <a href="episodes.php?template=true" class="tool-btn">📄 Template CSV</a>
+                <a href="episodes.php?export_csv=true" class="tool-btn">📥 Export CSV</a>
+
+                <!-- Separate Import Form -->
+                <form method="POST" enctype="multipart/form-data" style="display:inline;">
+                    <label class="tool-btn" style="cursor: pointer; margin:0;">
+                        📤 Import CSV <input type="file" name="csv_file" accept=".csv" onchange="this.form.submit();" style="display:none;">
+                    </label>
+                </form>
             </div>
-        </form>
+        </div>
+
+        <div class="table-responsive">
+            <table id="epTable">
+                <thead>
+                    <tr>
+                        <th style="width: 30px;"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
+                        <th>Sr No</th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='series_asc')?'series_desc':'series_asc' ?>">
+                                Series Name <span><?= ($sort=='series_asc')?'↑':(($sort=='series_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='season_asc')?'season_desc':'season_asc' ?>">
+                                Season <span><?= ($sort=='season_asc')?'↑':(($sort=='season_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='ep_asc')?'ep_desc':'ep_asc' ?>">
+                                Ep No <span><?= ($sort=='ep_asc')?'↑':(($sort=='ep_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='title_asc')?'title_desc':'title_asc' ?>">
+                                Episode Title <span><?= ($sort=='title_asc')?'↑':(($sort=='title_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='status_asc')?'status_desc':'status_asc' ?>">
+                                Status <span><?= ($sort=='status_asc')?'↑':(($sort=='status_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='target_asc')?'target_desc':'target_asc' ?>">
+                                Target Date <span><?= ($sort=='target_asc')?'↑':(($sort=='target_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='added_asc')?'added_desc':'added_asc' ?>">
+                                Added Date <span><?= ($sort=='added_asc')?'↑':(($sort=='added_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if ($episodes): $sr = 1; foreach ($episodes as $ep): ?>
+                    <tr class="ep-row" data-search="<?= htmlspecialchars(strtolower($ep['series_name'].' '.$ep['season_name'].' '.$ep['episode_num'].' '.$ep['title'])) ?>">
+                        <td><input type="checkbox" name="selected_ids[]" value="<?= $ep['id'] ?>" form="bulkForm" onclick="checkSelection()"></td>
+                        <td><strong><?= $sr++ ?></strong></td>
+                        <td><span style="color: var(--accent); font-weight:650;"><?= htmlspecialchars($ep['series_name']) ?></span></td>
+                        <td><?= htmlspecialchars($ep['season_name']) ?></td>
+                        <td><strong style="color: #fff;"><?= htmlspecialchars($ep['episode_num']) ?></strong></td>
+                        <td style="font-weight:600;"><?= htmlspecialchars($ep['title']) ?></td>
+                        <td>
+                            <?php 
+                                $st = $ep['status'] ?: 'Script Ready';
+                                $bc = ($st == 'Published') ? 'status-pub' : (($st == 'In Production') ? 'status-prod' : 'status-ready');
+                            ?>
+                            <span class="badge <?= $bc ?>"><?= $st ?></span>
+                        </td>
+                        <td><span style="color: #fbbf24; font-weight:600;"><?= htmlspecialchars($ep['target_date'] ?: 'Not Set') ?></span></td>
+                        <td style="color: var(--muted); font-size: 11px;"><?= htmlspecialchars(substr($ep['created_at'], 0, 10)) ?></td>
+                        <td style="text-align: right;">
+                            <div class="dropdown">
+                                <button type="button" class="dropbtn">Actions ▾</button>
+                                <div class="dropdown-content">
+                                    <a href="add_edit.php?action=view&id=<?= $ep['id'] ?>">👁️ View</a>
+                                    <button type="button" onclick="copyMetadata(<?= htmlspecialchars(json_encode($ep)) ?>)">📋 Copy</button>
+                                    <a href="add_edit.php?action=edit&id=<?= $ep['id'] ?>">✏️ Edit</a>
+                                    <a href="episodes.php?action=delete&id=<?= $ep['id'] ?>" onclick="return confirm('Delete this episode?');" style="color:#f87171;">🗑️ Delete</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <?php endforeach; else: ?>
+                    <tr><td colspan="10" style="text-align: center; color: var(--muted); padding: 30px;">No episodes found in database.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
     <script>
         function filterTable() {
@@ -272,14 +275,6 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             for(let cb of checkboxes) { if(cb.checked) checkedCount++; }
             let delBtn = document.getElementById('deleteBtn');
             delBtn.disabled = (checkedCount === 0);
-        }
-        function submitBulk(action) {
-            document.getElementById('bulkActionInput').value = action;
-            if(action === 'delete_selected') {
-                if(confirm('Are you sure you want to delete selected episodes?')) {
-                    document.getElementById('bulkForm').submit();
-                }
-            }
         }
         function copyMetadata(ep) {
             let text = `=== YOUTUBE TITLE ===\n${ep.yt_title}\n\n=== DESCRIPTION ===\n${ep.yt_desc}\n\n=== TAGS ===\n${ep.yt_tags}\n\n=== SCRIPT ===\n${ep.script}\n\n=== REELS CAPTION ===\n${ep.reels_tiktok_caption}\n\n=== THUMBNAIL PROMPT ===\n${ep.thumbnail_prompt}`;
