@@ -40,14 +40,14 @@ if ($id) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>✨ Studio Episode Form</title>
+    <title>✨ Add / Edit Episode</title>
     <style>
         :root { 
             --bg: #030712; --card: #0f172a; --border: rgba(255, 255, 255, 0.1);
             --primary: #8b5cf6; --accent: #06b6d4; --text: #f3f4f6; --muted: #9ca3af;
         }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
-        .wrapper { max-width: 800px; margin: auto; }
+        .wrapper { max-width: 850px; margin: auto; }
         .card-box { background: var(--card); border: 1px solid var(--border); padding: 24px; border-radius: 18px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
         h2 { margin-top: 0; color: #fff; font-size: 18px; }
         .form-group { margin-bottom: 14px; }
@@ -56,7 +56,6 @@ if ($id) {
         textarea { height: 95px; resize: vertical; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
         .btn-submit { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; font-size: 15px; }
-        .back-btn { display: inline-block; margin-bottom: 14px; color: var(--accent); text-decoration: none; font-weight: 600; font-size: 13px; }
         
         .meta-card { background: rgba(0,0,0,0.25); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 14px; }
         .meta-card h3 { margin: 0 0 8px 0; color: var(--accent); font-size: 12px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
@@ -67,7 +66,7 @@ if ($id) {
 </head>
 <body>
     <div class="wrapper">
-        <a href="episodes.php" class="back-btn">&larr; Back to Episode Manager</a>
+        <?php include 'header.php'; ?>
         
         <div class="card-box">
             <?php if ($action === 'view' && $item): ?>
@@ -76,7 +75,7 @@ if ($id) {
                         <span style="font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase;"><?= htmlspecialchars($item['series_name']) ?> | <?= htmlspecialchars($item['season_name']) ?></span>
                         <h2 style="margin:2px 0 0 0; color: #fff;"><?= htmlspecialchars($item['episode_num']) ?> - <?= htmlspecialchars($item['title']) ?></h2>
                     </div>
-                    <a href="episodes.php?action=export_txt&id=<?= $item['id'] ?>" class="btn-act" style="background:#2563eb; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:600; color:#fff; font-size:13px;">📥 Export txt</a>
+                    <a href="episodes.php?action=export_txt&id=<?= $item['id'] ?>" style="background:#2563eb; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:600; color:#fff; font-size:13px;">📥 Export txt</a>
                 </div>
                 <button class="bulk-btn" onclick="copyAll()">🚀 Copy All Metadata (All-in-One)</button>
                 
