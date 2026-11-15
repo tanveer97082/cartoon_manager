@@ -7,50 +7,53 @@ require_once 'config.php';
 
 $msg = "";
 
-// Handle Full Database Grid Save (All Columns)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_all_columns'])) {
-    if (isset($_POST['row_id']) && is_array($_POST['row_id'])) {
-        $stmt = $db->prepare("UPDATE episodes SET series_name=?, season_name=?, episode_num=?, title=?, yt_title=?, yt_desc=?, yt_tags=?, script=?, reels_tiktok_caption=?, thumbnail_prompt=?, status=?, target_date=? WHERE id=?");
-        
-        for ($i = 0; $i < count($_POST['row_id']); $i++) {
-            $id = $_POST['row_id'][$i];
-            $series = $_POST['series_name'][$i];
-            $season = $_POST['season_name'][$i];
-            $ep_num = $_POST['episode_num'][$i];
-            $title = $_POST['title'][$i];
-            $yt_title = $_POST['yt_title'][$i];
-            $yt_desc = $_POST['yt_desc'][$i];
-            $yt_tags = $_POST['yt_tags'][$i];
-            $script = $_POST['script'][$i];
-            $caption = $_POST['reels_tiktok_caption'][$i];
-            $thumb = $_POST['thumbnail_prompt'][$i];
-            $status = $_POST['status'][$i];
-            $target_date = $_POST['target_date'][$i];
-
-            $stmt->execute([$series, $season, $ep_num, $title, $yt_title, $yt_desc, $yt_tags, $script, $caption, $thumb, $status, $target_date, $id]);
+// Handle Dynamic Custom Column Addition
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_column'])) {
+    $col_name = trim($_POST['column_name']);
+    // Sanitize column name (alphanumeric and underscores only)
+    $col_name = preg_replace('/[^a-zA-Z0-9_]/', '_', $col_name);
+    
+    if (!empty($col_name)) {
+        try {
+            $db->exec("ALTER TABLE episodes ADD COLUMN $col_name TEXT DEFAULT ''");
+            $msg = "Successfully added new column: '$col_name' to database!";
+        } catch (PDOException $e) {
+            $msg = "Error adding column (it might already exist): " . $e->getMessage();
         }
-        $msg = "All hidden and visible database columns updated successfully!";
     }
 }
 
-// Handle Add New Row with Complete Data
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_row'])) {
-    $stmt = $db->prepare("INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, thumbnail_prompt, status, target_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([
-        $_POST['new_series'] ?? 'Munki & Trunk',
-        $_POST['new_season'] ?? 'Season 1',
-        $_POST['new_ep'] ?? 'S1E1',
-        $_POST['new_title'] ?? 'New Episode',
-        $_POST['new_yt'] ?? 'YouTube Title',
-        $_POST['new_desc'] ?? '',
-        $_POST['new_tags'] ?? '',
-        $_POST['new_script'] ?? '',
-        $_POST['new_caption'] ?? '',
-        $_POST['new_thumb'] ?? '',
-        'Script Ready',
-        date('Y-m-d')
-    ]);
-    $msg = "New complete episode row inserted!";
+// Handle Full Database Grid Save
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_all_columns'])) {
+    if (isset($_POST['row_id']) && is_array($_POST['row_id'])) {
+        // Fetch current table columns dynamically
+        $columns_query = $db->query("PRAGMA table_info(episodes)");
+        $table_cols = [];
+        while ($col = $columns_query->fetch(PDO::FETCH_ASSOC)) {
+            if ($col['name'] !== 'id' && $col['name'] !== 'created_at') {
+                $table_cols[] = $col['name'];
+            }
+        }
+
+        for ($i = 0; $i < count($_POST['row_id']); $i++) {
+            $id = $_POST['row_id'][$i];
+            $update_parts = [];
+            $params = [];
+
+            foreach ($table_cols as $col) {
+                if (isset($_POST[$col][$i])) {
+                    $update_parts[] = "$col = ?";
+                    $params[] = $_POST[$col][$i];
+                }
+            }
+            $params[] = $id;
+
+            $sql = "UPDATE episodes SET " . implode(', ', $update_parts) . " WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+        }
+        $msg = "All database columns updated successfully!";
+    }
 }
 
 // Handle Row Delete
@@ -61,7 +64,25 @@ if (isset($_GET['delete_id'])) {
     exit;
 }
 
-$rows = $db->query("SELECT * FROM episodes ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
+// Fetch table column names dynamically
+$columns_query = $db->query("PRAGMA table_info(episodes)");
+$all_columns = [];
+while ($col = $columns_query->fetch(PDO::FETCH_ASSOC)) {
+    $all_columns[] = $col['name'];
+}
+
+// Sorting logic from header clicks
+$sort = $_GET['sort'] ?? 'id_desc';
+$order_sql = "ORDER BY id DESC";
+if (isset($_GET['col'])) {
+    $col_sort = $_GET['col'];
+    $dir = $_GET['dir'] ?? 'asc';
+    if (in_array($col_sort, $all_columns)) {
+        $order_sql = "ORDER BY $col_sort " . ($dir === 'desc' ? 'DESC' : 'ASC');
+    }
+}
+
+$rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html lang="en">
@@ -85,7 +106,9 @@ $rows = $db->query("SELECT * FROM episodes ORDER BY id DESC")->fetchAll(PDO::FET
 
         .spreadsheet-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 75vh; }
         table { width: max-content; border-collapse: collapse; text-align: left; font-size: 13px; }
-        th { background: rgba(15,23,42,0.95); color: var(--accent); padding: 12px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; }
+        th { background: rgba(15,23,42,0.95); color: var(--accent); padding: 12px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        th a { color: var(--accent); text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        th a:hover { color: #fff; }
         td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: rgba(255,255,255,0.02); }
 
@@ -108,11 +131,11 @@ $rows = $db->query("SELECT * FROM episodes ORDER BY id DESC")->fetchAll(PDO::FET
         <form method="POST">
             <div class="excel-ribbon">
                 <div class="ribbon-group">
-                    <span style="font-weight: 700; color: #fff; font-size: 14px;">📊 Complete Database Excel Suite (All Columns Visible)</span>
+                    <span style="font-weight: 700; color: #fff; font-size: 14px;">📊 Excel Database Studio (Sorting & Column Manager)</span>
                 </div>
                 <div class="ribbon-group">
                     <button type="submit" name="save_all_columns" class="excel-btn btn-save">💾 Save All Changes</button>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('addRowModal').style.display='flex';" class="excel-btn">➕ Insert New Row</a>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('addColumnModal').style.display='flex';" class="excel-btn">➕ Add New Column</a>
                 </div>
             </div>
 
@@ -120,55 +143,48 @@ $rows = $db->query("SELECT * FROM episodes ORDER BY id DESC")->fetchAll(PDO::FET
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 40px;">ID</th>
-                            <th>Series Name</th>
-                            <th>Season</th>
-                            <th>Ep No</th>
-                            <th>Episode Title</th>
-                            <th>YouTube Title</th>
-                            <th>YouTube Description</th>
-                            <th>YouTube Tags</th>
-                            <th>5-Min Script</th>
-                            <th>Reels Caption</th>
-                            <th>Thumbnail Prompt</th>
-                            <th>Status</th>
-                            <th>Target Date</th>
-                            <th>Created At</th>
+                            <?php foreach ($all_columns as $col): 
+                                $next_dir = (isset($_GET['col']) && $_GET['col'] === $col && ($_GET['dir'] ?? 'asc') === 'asc') ? 'desc' : 'asc';
+                                $arrow = (isset($_GET['col']) && $_GET['col'] === $col) ? (($_GET['dir'] ?? 'asc') === 'asc' ? '↑' : '↓') : '↕';
+                            ?>
+                            <th>
+                                <a href="export_import.php?col=<?= $col ?>&dir=<?= $next_dir ?>">
+                                    <?= htmlspecialchars(str_replace('_', ' ', $col)) ?> <span><?= $arrow ?></span>
+                                </a>
+                            </th>
+                            <?php endforeach; ?>
                             <th style="text-align: right; position: sticky; right: 0; background: #0f172a;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($rows): foreach ($rows as $r): ?>
                         <tr>
+                            <?php foreach ($all_columns as $col): ?>
                             <td>
-                                <strong><?= $r['id'] ?></strong>
-                                <input type="hidden" name="row_id[]" value="<?= $r['id'] ?>">
+                                <?php if ($col === 'id'): ?>
+                                    <strong><?= $r['id'] ?></strong>
+                                    <input type="hidden" name="row_id[]" value="<?= $r['id'] ?>">
+                                <?php elseif ($col === 'status'): ?>
+                                    <select name="status[]" class="cell-input" style="width: 130px;">
+                                        <option value="Script Ready" <?= $r['status']=='Script Ready'?'selected':'' ?>>Script Ready</option>
+                                        <option value="In Production" <?= $r['status']=='In Production'?'selected':'' ?>>In Production</option>
+                                        <option value="Published" <?= $r['status']=='Published'?'selected':'' ?>>Published</option>
+                                    </select>
+                                <?php elseif ($col === 'target_date'): ?>
+                                    <input type="date" name="target_date[]" class="cell-input" value="<?= htmlspecialchars($r['target_date']) ?>" style="width: 135px;">
+                                <?php elseif ($col === 'created_at'): ?>
+                                    <span style="color: var(--muted); font-size: 11px;"><?= htmlspecialchars($r['created_at']) ?></span>
+                                <?php else: ?>
+                                    <input type="text" name="<?= $col ?>[]" class="cell-input" value="<?= htmlspecialchars($r[$col] ?? '') ?>">
+                                <?php endif; ?>
                             </td>
-                            <td><input type="text" name="series_name[]" class="cell-input" value="<?= htmlspecialchars($r['series_name']) ?>"></td>
-                            <td><input type="text" name="season_name[]" class="cell-input" value="<?= htmlspecialchars($r['season_name']) ?>" style="width: 90px;"></td>
-                            <td><input type="text" name="episode_num[]" class="cell-input" value="<?= htmlspecialchars($r['episode_num']) ?>" style="width: 80px;"></td>
-                            <td><input type="text" name="title[]" class="cell-input" value="<?= htmlspecialchars($r['title']) ?>"></td>
-                            <td><input type="text" name="yt_title[]" class="cell-input" value="<?= htmlspecialchars($r['yt_title']) ?>"></td>
-                            <td><input type="text" name="yt_desc[]" class="cell-input" value="<?= htmlspecialchars($r['yt_desc']) ?>"></td>
-                            <td><input type="text" name="yt_tags[]" class="cell-input" value="<?= htmlspecialchars($r['yt_tags']) ?>"></td>
-                            <td><input type="text" name="script[]" class="cell-input" value="<?= htmlspecialchars($r['script']) ?>"></td>
-                            <td><input type="text" name="reels_tiktok_caption[]" class="cell-input" value="<?= htmlspecialchars($r['reels_tiktok_caption']) ?>"></td>
-                            <td><input type="text" name="thumbnail_prompt[]" class="cell-input" value="<?= htmlspecialchars($r['thumbnail_prompt']) ?>"></td>
-                            <td>
-                                <select name="status[]" class="cell-input" style="width: 130px;">
-                                    <option value="Script Ready" <?= $r['status']=='Script Ready'?'selected':'' ?>>Script Ready</option>
-                                    <option value="In Production" <?= $r['status']=='In Production'?'selected':'' ?>>In Production</option>
-                                    <option value="Published" <?= $r['status']=='Published'?'selected':'' ?>>Published</option>
-                                </select>
-                            </td>
-                            <td><input type="date" name="target_date[]" class="cell-input" value="<?= htmlspecialchars($r['target_date']) ?>" style="width: 135px;"></td>
-                            <td style="color: var(--muted); font-size: 11px;"><?= htmlspecialchars($r['created_at']) ?></td>
+                            <?php endforeach; ?>
                             <td style="text-align: right; position: sticky; right: 0; background: #0f172a;">
                                 <a href="export_import.php?delete_id=<?= $r['id'] ?>" class="del-cell-btn" onclick="return confirm('Delete this row?');">Delete</a>
                             </td>
                         </tr>
                         <?php endforeach; else: ?>
-                        <tr><td colspan="15" style="text-align: center; color: var(--muted); padding: 30px;">No records found in database.</td></tr>
+                        <tr><td colspan="<?= count($all_columns)+1 ?>" style="text-align: center; color: var(--muted); padding: 30px;">No records found in database.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -176,24 +192,18 @@ $rows = $db->query("SELECT * FROM episodes ORDER BY id DESC")->fetchAll(PDO::FET
         </form>
     </div>
 
-    <!-- Quick Add Complete Row Modal -->
-    <div id="addRowModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
-        <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:500px; max-height:90vh; overflow-y:auto;">
-            <h2 style="margin-top:0; color:#fff; font-size:18px;">➕ Insert Complete Episode Row</h2>
+    <!-- Add Custom Column Modal -->
+    <div id="addColumnModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
+        <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:400px;">
+            <h2 style="margin-top:0; color:#fff; font-size:18px;">➕ Add New Database Column</h2>
             <form method="POST">
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SERIES NAME</label><input type="text" name="new_series" value="Munki & Trunk" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SEASON NAME</label><input type="text" name="new_season" value="Season 1" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE NUMBER</label><input type="text" name="new_ep" placeholder="S1E5" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE TITLE</label><input type="text" name="new_title" placeholder="Title" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">YOUTUBE TITLE</label><input type="text" name="new_yt" placeholder="YT Title" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">YOUTUBE DESCRIPTION</label><textarea name="new_desc" class="cell-input" style="width:100%; height:70px;"></textarea></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">YOUTUBE TAGS</label><input type="text" name="new_tags" class="cell-input" style="width:100%;"></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">5-MIN SCRIPT</label><textarea name="new_script" class="cell-input" style="width:100%; height:70px;"></textarea></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">REELS CAPTION</label><textarea name="new_caption" class="cell-input" style="width:100%; height:60px;"></textarea></div>
-                <div style="margin-bottom: 16px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">THUMBNAIL PROMPT</label><textarea name="new_thumb" class="cell-input" style="width:100%; height:60px;"></textarea></div>
+                <div style="margin-bottom: 16px;">
+                    <label style="font-size:11px; color:var(--accent); font-weight:700;">COLUMN NAME (e.g. director, duration)</label>
+                    <input type="text" name="column_name" placeholder="column_name" class="cell-input" style="width:100%; margin-top:6px;" required>
+                </div>
                 <div style="display:flex; gap:10px;">
-                    <button type="submit" name="add_row" class="excel-btn btn-save" style="flex:1; justify-content:center;">Insert Row</button>
-                    <button type="button" onclick="document.getElementById('addRowModal').style.display='none';" class="excel-btn" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1);">Cancel</button>
+                    <button type="submit" name="add_column" class="excel-btn btn-save" style="flex:1; justify-content:center;">Create Column</button>
+                    <button type="button" onclick="document.getElementById('addColumnModal').style.display='none';" class="excel-btn" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1);">Cancel</button>
                 </div>
             </form>
         </div>
