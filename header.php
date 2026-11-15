@@ -22,6 +22,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="index.php" class="nav-btn <?= ($current_page == 'index.php') ? 'active' : '' ?>">📊 Dashboard</a>
         <a href="episodes.php" class="nav-btn <?= ($current_page == 'episodes.php') ? 'active' : '' ?>">🎬 Episodes</a>
         <a href="add_edit.php" class="nav-btn <?= ($current_page == 'add_edit.php') ? 'active' : '' ?>">➕ Add Episode</a>
-        <a href="export_import.php" class="nav-btn <?= ($current_page == 'export_import.php') ? 'active' : '' ?>">📂 Excel Studio</a>
+        <a href="excel_studio.php" class="nav-btn <?= ($current_page == 'excel_studio.php') ? 'active' : '' ?>">📂 Excel Studio</a>
     </div>
 </div>
