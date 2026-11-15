@@ -10,15 +10,53 @@ $msg = "";
 // Handle Dynamic Custom Column Addition
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_column'])) {
     $col_name = trim($_POST['column_name']);
-    // Sanitize column name (alphanumeric and underscores only)
     $col_name = preg_replace('/[^a-zA-Z0-9_]/', '_', $col_name);
-    
     if (!empty($col_name)) {
         try {
             $db->exec("ALTER TABLE episodes ADD COLUMN $col_name TEXT DEFAULT ''");
-            $msg = "Successfully added new column: '$col_name' to database!";
+            $msg = "Successfully added column: '$col_name'!";
         } catch (PDOException $e) {
-            $msg = "Error adding column (it might already exist): " . $e->getMessage();
+            $msg = "Error adding column: " . $e->getMessage();
+        }
+    }
+}
+
+// Handle Single Row Delete
+if (isset($_GET['delete_id'])) {
+    $stmt = $db->prepare("DELETE FROM episodes WHERE id = ?");
+    $stmt->execute([$_GET['delete_id']]);
+    header("Location: export_import.php");
+    exit;
+}
+
+// Handle Bulk Actions (Delete Selected or Export Selected)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
+    if (!empty($_POST['selected_ids'])) {
+        $ids = $_POST['selected_ids'];
+        if ($_POST['bulk_action'] === 'delete_selected') {
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $db->prepare("DELETE FROM episodes WHERE id IN ($placeholders)");
+            $stmt->execute($ids);
+            $msg = "Selected rows deleted successfully!";
+        } elseif ($_POST['bulk_action'] === 'export_selected') {
+            if (ob_get_level()) ob_end_clean();
+            header('Content-Type: text/csv; charset=utf-8');
+            header('Content-Disposition: attachment; filename=selected_cartoon_database.csv');
+            
+            $out = fopen('php://output', 'w');
+            $columns_query = $db->query("PRAGMA table_info(episodes)");
+            $cols = [];
+            while ($col = $columns_query->fetch(PDO::FETCH_ASSOC)) { $cols[] = $col['name']; }
+            fputcsv($out, $cols, ',', '"', '\\');
+            
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $stmt = $db->prepare("SELECT * FROM episodes WHERE id IN ($placeholders)");
+            $stmt->execute($ids);
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                fputcsv($out, $row, ',', '"', '\\');
+            }
+            fclose($out);
+            exit;
         }
     }
 }
@@ -26,7 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_column'])) {
 // Handle Full Database Grid Save
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_all_columns'])) {
     if (isset($_POST['row_id']) && is_array($_POST['row_id'])) {
-        // Fetch current table columns dynamically
         $columns_query = $db->query("PRAGMA table_info(episodes)");
         $table_cols = [];
         while ($col = $columns_query->fetch(PDO::FETCH_ASSOC)) {
@@ -52,26 +89,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_all_columns'])) 
             $stmt = $db->prepare($sql);
             $stmt->execute($params);
         }
-        $msg = "All database columns updated successfully!";
+        $msg = "All database changes saved successfully!";
     }
 }
 
-// Handle Row Delete
-if (isset($_GET['delete_id'])) {
-    $stmt = $db->prepare("DELETE FROM episodes WHERE id = ?");
-    $stmt->execute([$_GET['delete_id']]);
-    header("Location: export_import.php");
-    exit;
+// Handle Insert New Row
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_row'])) {
+    $stmt = $db->prepare("INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, status, target_date) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([
+        $_POST['new_series'] ?? 'Munki & Trunk',
+        $_POST['new_season'] ?? 'Season 1',
+        $_POST['new_ep'] ?? 'S1E1',
+        $_POST['new_title'] ?? 'New Episode',
+        $_POST['new_yt'] ?? 'YouTube Title',
+        'Script Ready',
+        date('Y-m-d')
+    ]);
+    $msg = "New episode row inserted!";
 }
 
-// Fetch table column names dynamically
+// Fetch columns and rows
 $columns_query = $db->query("PRAGMA table_info(episodes)");
 $all_columns = [];
 while ($col = $columns_query->fetch(PDO::FETCH_ASSOC)) {
     $all_columns[] = $col['name'];
 }
 
-// Sorting logic from header clicks
 $sort = $_GET['sort'] ?? 'id_desc';
 $order_sql = "ORDER BY id DESC";
 if (isset($_GET['col'])) {
@@ -89,7 +132,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>✨ Full Database Excel Studio</title>
+    <title>✨ Ultimate Excel Database Studio</title>
     <style>
         :root { 
             --bg: #030712; --card: #0f172a; --border: rgba(255, 255, 255, 0.1);
@@ -103,6 +146,10 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         .excel-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
         .excel-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
         .btn-save { background: linear-gradient(135deg, #059669, #10b981); border-color: #059669; color: white; }
+        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .search-input { padding: 9px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 13px; width: 180px; }
+        .search-input:focus { outline: none; border-color: var(--primary); }
 
         .spreadsheet-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 75vh; }
         table { width: max-content; border-collapse: collapse; text-align: left; font-size: 13px; }
@@ -113,11 +160,17 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         tr:hover { background: rgba(255,255,255,0.02); }
 
         .cell-input { width: 180px; background: rgba(0,0,0,0.3); border: 1px solid transparent; color: var(--text); padding: 7px 10px; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-        .cell-input:focus { outline: none; background: rgba(15,23,42,0.9); border-color: var(--primary); width: 280px; }
+        .cell-input:focus { outline: none; background: rgba(15,23,42,0.9); border-color: var(--primary); width: 260px; }
+
+        /* Action Dropdown Menu */
+        .dropdown { position: relative; display: inline-block; }
+        .dropbtn { background: var(--primary); color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .dropdown-content { display: none; position: absolute; right: 0; background: #1e293b; min-width: 140px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 20; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .dropdown-content a, .dropdown-content button { color: var(--text); padding: 8px 12px; text-decoration: none; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+        .dropdown-content a:hover, .dropdown-content button:hover { background: var(--primary); color: #fff; }
+        .dropdown:hover .dropdown-content { display: block; }
 
         .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid rgba(5, 150, 105, 0.4); color: #34d399; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
-        .del-cell-btn { background: rgba(220,38,38,0.2); color: #f87171; border: 1px solid rgba(220,38,38,0.4); padding: 5px 10px; border-radius: 6px; text-decoration: none; font-size: 11px; font-weight: 600; }
-        .del-cell-btn:hover { background: #dc2626; color: #fff; }
     </style>
 </head>
 <body>
@@ -128,21 +181,28 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
             <div class="alert"><?= htmlspecialchars($msg) ?></div>
         <?php endif; ?>
 
-        <form method="POST">
+        <form method="POST" id="excelForm">
+            <input type="hidden" name="bulk_action" id="bulkActionInput" value="">
+
             <div class="excel-ribbon">
                 <div class="ribbon-group">
-                    <span style="font-weight: 700; color: #fff; font-size: 14px;">📊 Excel Database Studio (Sorting & Column Manager)</span>
+                    <span style="font-weight: 700; color: #fff; font-size: 14px;">📊 Excel Studio Grid</span>
+                    <input type="text" id="gridSearch" class="search-input" placeholder="🔍 Quick search grid..." onkeyup="filterGrid()">
                 </div>
                 <div class="ribbon-group">
                     <button type="submit" name="save_all_columns" class="excel-btn btn-save">💾 Save All Changes</button>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('addColumnModal').style.display='flex';" class="excel-btn">➕ Add New Column</a>
+                    <button type="submit" id="batchDelBtn" onclick="submitBulk('delete_selected')" class="excel-btn btn-action" style="background:rgba(220,38,38,0.2); color:#f87171; border-color:rgba(220,38,38,0.4);" disabled>🗑️ Delete Selected</button>
+                    <button type="submit" id="batchExpBtn" onclick="submitBulk('export_selected')" class="excel-btn btn-action" disabled>📥 Export Selected</button>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('addRowModal').style.display='flex';" class="excel-btn">➕ Insert Row</a>
+                    <a href="#" onclick="event.preventDefault(); document.getElementById('addColumnModal').style.display='flex';" class="excel-btn">⚙️ Add Column</a>
                 </div>
             </div>
 
             <div class="spreadsheet-container">
-                <table>
+                <table id="excelTable">
                     <thead>
                         <tr>
+                            <th style="width: 35px;"><input type="checkbox" id="selectAll" onclick="toggleAll(this)"></th>
                             <?php foreach ($all_columns as $col): 
                                 $next_dir = (isset($_GET['col']) && $_GET['col'] === $col && ($_GET['dir'] ?? 'asc') === 'asc') ? 'desc' : 'asc';
                                 $arrow = (isset($_GET['col']) && $_GET['col'] === $col) ? (($_GET['dir'] ?? 'asc') === 'asc' ? '↑' : '↓') : '↕';
@@ -158,7 +218,8 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                     </thead>
                     <tbody>
                         <?php if ($rows): foreach ($rows as $r): ?>
-                        <tr>
+                        <tr class="grid-row" data-search="<?= htmlspecialchars(strtolower(implode(' ', $r))) ?>">
+                            <td><input type="checkbox" name="selected_ids[]" value="<?= $r['id'] ?>" onclick="checkSelection()"></td>
                             <?php foreach ($all_columns as $col): ?>
                             <td>
                                 <?php if ($col === 'id'): ?>
@@ -180,11 +241,18 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                             </td>
                             <?php endforeach; ?>
                             <td style="text-align: right; position: sticky; right: 0; background: #0f172a;">
-                                <a href="export_import.php?delete_id=<?= $r['id'] ?>" class="del-cell-btn" onclick="return confirm('Delete this row?');">Delete</a>
+                                <div class="dropdown">
+                                    <button type="button" class="dropbtn">Actions ▾</button>
+                                    <div class="dropdown-content">
+                                        <a href="add_edit.php?action=view&id=<?= $r['id'] ?>">👁️ View Data</a>
+                                        <button type="button" onclick="copyEpisodeData(<?= htmlspecialchars(json_encode($r)) ?>)">📋 Copy Next Ep Data</button>
+                                        <a href="export_import.php?delete_id=<?= $r['id'] ?>" onclick="return confirm('Delete this row?');" style="color:#f87171;">🗑️ Delete</a>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; else: ?>
-                        <tr><td colspan="<?= count($all_columns)+1 ?>" style="text-align: center; color: var(--muted); padding: 30px;">No records found in database.</td></tr>
+                        <tr><td colspan="<?= count($all_columns)+2 ?>" style="text-align: center; color: var(--muted); padding: 30px;">No records found.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
@@ -192,13 +260,29 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         </form>
     </div>
 
-    <!-- Add Custom Column Modal -->
+    <!-- Modals for Add Row / Add Column -->
+    <div id="addRowModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
+        <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:400px;">
+            <h2 style="margin-top:0; color:#fff; font-size:18px;">➕ Insert New Row</h2>
+            <form method="POST">
+                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SERIES NAME</label><input type="text" name="new_series" value="Munki & Trunk" class="cell-input" style="width:100%;" required></div>
+                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SEASON NAME</label><input type="text" name="new_season" value="Season 1" class="cell-input" style="width:100%;" required></div>
+                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE NUMBER</label><input type="text" name="new_ep" placeholder="S1E5" class="cell-input" style="width:100%;" required></div>
+                <div style="margin-bottom: 16px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE TITLE</label><input type="text" name="new_title" placeholder="Title" class="cell-input" style="width:100%;" required></div>
+                <div style="display:flex; gap:10px;">
+                    <button type="submit" name="add_row" class="excel-btn btn-save" style="flex:1; justify-content:center;">Insert Row</button>
+                    <button type="button" onclick="document.getElementById('addRowModal').style.display='none';" class="excel-btn" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1);">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div id="addColumnModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
         <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:400px;">
-            <h2 style="margin-top:0; color:#fff; font-size:18px;">➕ Add New Database Column</h2>
+            <h2 style="margin-top:0; color:#fff; font-size:18px;">⚙️ Add Database Column</h2>
             <form method="POST">
                 <div style="margin-bottom: 16px;">
-                    <label style="font-size:11px; color:var(--accent); font-weight:700;">COLUMN NAME (e.g. director, duration)</label>
+                    <label style="font-size:11px; color:var(--accent); font-weight:700;">COLUMN NAME (e.g. voice_artist)</label>
                     <input type="text" name="column_name" placeholder="column_name" class="cell-input" style="width:100%; margin-top:6px;" required>
                 </div>
                 <div style="display:flex; gap:10px;">
@@ -208,5 +292,41 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
             </form>
         </div>
     </div>
+
+    <script>
+        function filterGrid() {
+            let val = document.getElementById('gridSearch').value.toLowerCase();
+            let rows = document.getElementsByClassName('grid-row');
+            for (let r of rows) {
+                let text = r.getAttribute('data-search');
+                r.style.display = text.includes(val) ? "" : "none";
+            }
+        }
+        function toggleAll(source) {
+            let checkboxes = document.getElementsByName('selected_ids[]');
+            for(let cb of checkboxes) { cb.checked = source.checked; }
+            checkSelection();
+        }
+        function checkSelection() {
+            let checkboxes = document.getElementsByName('selected_ids[]');
+            let checkedCount = 0;
+            for(let cb of checkboxes) { if(cb.checked) checkedCount++; }
+            let delBtn = document.getElementById('batchDelBtn');
+            let expBtn = document.getElementById('batchExpBtn');
+            delBtn.disabled = (checkedCount === 0);
+            expBtn.disabled = (checkedCount === 0);
+        }
+        function submitBulk(action) {
+            document.getElementById('bulkActionInput').value = action;
+            if(action === 'delete_selected') {
+                if(!confirm('Are you sure you want to delete selected rows?')) return;
+            }
+            document.getElementById('excelForm').submit();
+        }
+        function copyEpisodeData(row) {
+            let text = `=== SERIES: ${row.series_name} | ${row.season_name} | ${row.episode_num} ===\nTITLE: ${row.title}\nYT TITLE: ${row.yt_title}\nDESC: ${row.yt_desc}\nTAGS: ${row.yt_tags}\nSCRIPT:\n${row.script}\n\nREELS CAPTION:\n${row.reels_tiktok_caption}\n\nTHUMBNAIL PROMPT:\n${row.thumbnail_prompt}`;
+            navigator.clipboard.writeText(text).then(() => alert(`🚀 Copied complete metadata for ${row.episode_num}!`));
+        }
+    </script>
 </body>
 </html>
