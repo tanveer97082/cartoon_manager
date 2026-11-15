@@ -23,6 +23,7 @@ def init_db():
             yt_tags TEXT,
             script TEXT,
             reels_tiktok_caption TEXT,
+            thumbnail_prompt TEXT,
             status TEXT DEFAULT 'Script Ready'
         )
     ''')
@@ -43,14 +44,14 @@ def add():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, thumbnail_prompt, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
         request.form.get('series_name', 'Munki & Trunk'),
         request.form.get('season_name', 'Season 1'),
         request.form['episode_num'], request.form['title'], request.form['yt_title'],
         request.form['yt_desc'], request.form['yt_tags'], request.form['script'],
-        request.form['reels_tiktok_caption'], request.form['status']
+        request.form['reels_tiktok_caption'], request.form['thumbnail_prompt'], request.form['status']
     ))
     conn.commit()
     conn.close()
@@ -79,13 +80,13 @@ def update(id):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
-        UPDATE episodes SET series_name=?, season_name=?, episode_num=?, title=?, yt_title=?, yt_desc=?, yt_tags=?, script=?, reels_tiktok_caption=?, status=?
+        UPDATE episodes SET series_name=?, season_name=?, episode_num=?, title=?, yt_title=?, yt_desc=?, yt_tags=?, script=?, reels_tiktok_caption=?, thumbnail_prompt=?, status=?
         WHERE id=?
     ''', (
         request.form['series_name'], request.form['season_name'], request.form['episode_num'],
         request.form['title'], request.form['yt_title'], request.form['yt_desc'],
         request.form['yt_tags'], request.form['script'], request.form['reels_tiktok_caption'],
-        request.form['status'], id
+        request.form['thumbnail_prompt'], request.form['status'], id
     ))
     conn.commit()
     conn.close()
@@ -109,12 +110,13 @@ def export_txt(id):
     conn.close()
     
     if row:
-        content = f"SERIES: {row[1]} | SEASON: {row[2]}\nEPISODE: {row[3]} - {row[4]}\nSTATUS: {row[10]}\n\n" \
+        content = f"SERIES: {row[1]} | SEASON: {row[2]}\nEPISODE: {row[3]} - {row[4]}\nSTATUS: {row[11]}\n\n" \
                   f"--- YOUTUBE TITLE ---\n{row[5]}\n\n" \
                   f"--- DESCRIPTION ---\n{row[6]}\n\n" \
                   f"--- TAGS ---\n{row[7]}\n\n" \
                   f"--- SCRIPT ---\n{row[8]}\n\n" \
-                  f"--- REELS / TIKTOK CAPTION ---\n{row[9]}\n"
+                  f"--- REELS / TIKTOK CAPTION ---\n{row[9]}\n\n" \
+                  f"--- THUMBNAIL PROMPT ---\n{row[10]}\n"
                   
         return send_file(
             io.BytesIO(content.encode('utf-8')),
@@ -126,9 +128,10 @@ def export_txt(id):
 
 if __name__ == '__main__':
     init_db()
+    # CLI Support: python app.py add 'Series' 'Season' 'Ep' 'Title' 'YT_Title' 'Desc' 'Tags' 'Script' 'Caption' 'ThumbPrompt' 'Status'
     if len(sys.argv) > 1 and sys.argv[1] == 'add':
         if len(sys.argv) < 6:
-            print("Usage: python app.py add 'Series' 'Season' 'Ep_Num' 'Title' 'YT_Title' 'Desc' 'Tags' 'Script' 'Caption' 'Status'")
+            print("Usage error for CLI add.")
         else:
             series = sys.argv[2]
             season = sys.argv[3]
@@ -139,14 +142,15 @@ if __name__ == '__main__':
             yt_tags = sys.argv[8] if len(sys.argv) > 8 else ""
             script = sys.argv[9] if len(sys.argv) > 9 else ""
             caption = sys.argv[10] if len(sys.argv) > 10 else ""
-            status = sys.argv[11] if len(sys.argv) > 11 else "Script Ready"
+            thumb = sys.argv[11] if len(sys.argv) > 11 else ""
+            status = sys.argv[12] if len(sys.argv) > 12 else "Script Ready"
 
             conn = sqlite3.connect(DB_NAME)
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (series, season, ep_num, title, yt_title, yt_desc, yt_tags, script, caption, status))
+                INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, thumbnail_prompt, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (series, season, ep_num, title, yt_title, yt_desc, yt_tags, script, caption, thumb, status))
             conn.commit()
             conn.close()
             print(f"[+] Success! [{series} - {season} {ep_num}] added via CLI.")
