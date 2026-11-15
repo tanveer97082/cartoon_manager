@@ -8,7 +8,6 @@ try {
     $db = new PDO('sqlite:' . $db_file);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-    // Create table with all studio metrics
     $db->exec("CREATE TABLE IF NOT EXISTS episodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         series_name TEXT DEFAULT 'Munki & Trunk',
@@ -24,6 +23,6 @@ try {
         status TEXT DEFAULT 'Script Ready'
     )");
 } catch (PDOException $e) {
-    die("Database Connection Error: " . $e->getMessage());
+    die("Database Error: " . $e->getMessage());
 }
 ?>
