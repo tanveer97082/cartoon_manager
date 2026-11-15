@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_column'])) {
 if (isset($_GET['delete_id'])) {
     $stmt = $db->prepare("DELETE FROM episodes WHERE id = ?");
     $stmt->execute([$_GET['delete_id']]);
-    header("Location: excel_studio.php");
+    header("Location: /excel_studio");
     exit;
 }
 
