@@ -6,50 +6,54 @@
     <title>✨ AI Cartoon Hub Pro</title>
     <style>
         :root { 
-            --bg-deep: #030712; --card-bg: rgba(30, 41, 59, 0.75); 
+            --bg-deep: #030712; --card-bg: rgba(30, 41, 59, 0.85); 
             --primary: #8b5cf6; --primary-glow: rgba(139, 92, 246, 0.4);
-            --accent: #06b6d4; --text: #f3f4f6; --text-muted: #9ca3af; --border: rgba(255, 255, 255, 0.1); 
+            --accent: #06b6d4; --text: #f3f4f6; --text-muted: #9ca3af; --border: rgba(255, 255, 255, 0.12); 
         }
-        body { font-family: system-ui, sans-serif; background: var(--bg-deep); color: var(--text); margin: 0; padding: 15px; min-height: 100vh; }
-        .container { max-width: 780px; margin: auto; background: var(--card-bg); backdrop-filter: blur(12px); padding: 22px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-deep); background-image: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.12) 0%, transparent 40%); color: var(--text); margin: 0; padding: 12px; min-height: 100vh; }
+        .container { max-width: 780px; margin: auto; background: var(--card-bg); backdrop-filter: blur(16px); padding: 20px; border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.7); }
         h1, h2 { color: #fff; margin-top: 0; }
-        .btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; }
+        .btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; box-shadow: 0 4px 15px var(--primary-glow); }
         .form-group { margin-bottom: 14px; }
-        label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--accent); font-weight: 600; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 11px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box; font-size: 14px; }
+        label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea, select { width: 100%; padding: 11px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box; font-size: 14px; }
         textarea { height: 85px; resize: vertical; }
-        .search-box { width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 14px; margin-bottom: 20px; box-sizing: border-box; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 14px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
-        th { background: rgba(17, 24, 39, 0.8); color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
-        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
-        .btn-action { padding: 6px 10px; font-size: 12px; border-radius: 6px; text-decoration: none; color: white; font-weight: 600; display: inline-block; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .search-box { width: 100%; padding: 12px 15px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 14px; margin-bottom: 20px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        th, td { padding: 14px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        th { background: rgba(17, 24, 39, 0.9); color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        .actions { display: flex; gap: 6px; }
+        .btn-action { padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none; color: white; font-weight: 600; display: inline-block; transition: transform 0.2s; }
+        .btn-action:hover { transform: scale(1.05); }
         .bg-view { background: #059669; } .bg-edit { background: #d97706; } .bg-delete { background: #dc2626; } .bg-export { background: #2563eb; }
-        .back-link { display: inline-block; margin-bottom: 15px; color: var(--accent); text-decoration: none; font-weight: 600; }
-        .card { background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); padding: 16px; border-radius: 10px; margin-bottom: 15px; }
-        .card h3 { margin-top: 0; color: var(--accent); font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .copy-btn { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-        .bulk-copy-btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 15px; }
-        pre { white-space: pre-wrap; font-family: inherit; margin: 8px 0 0 0; color: #e2e8f0; font-size: 13px; background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid var(--border); max-height: 160px; overflow-y: auto; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: var(--accent); text-decoration: none; font-weight: 600; font-size: 14px; }
+        .card { background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }
+        .card h3 { margin-top: 0; color: var(--accent); font-size: 14px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+        .copy-btn { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .copy-btn:hover { background: var(--primary); color: white; }
+        .bulk-copy-btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 16px; font-size: 14px; box-shadow: 0 4px 15px rgba(6,182,212,0.3); }
+        pre { white-space: pre-wrap; font-family: inherit; margin: 8px 0 0 0; color: #e2e8f0; font-size: 13px; background: rgba(30, 41, 59, 0.6); padding: 12px; border-radius: 8px; border: 1px solid var(--border); max-height: 160px; overflow-y: auto; }
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-        .status-ready { background: rgba(5, 150, 105, 0.2); color: #34d399; }
-        .status-prod { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
-        .status-pub { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+        .badge { padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; display: inline-block; letter-spacing: 0.5px; margin-top: 4px; }
+        .status-ready { background: rgba(5, 150, 105, 0.25); color: #34d399; border: 1px solid rgba(5, 150, 105, 0.4); }
+        .status-prod { background: rgba(217, 119, 6, 0.25); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
+        .status-pub { background: rgba(37, 99, 235, 0.25); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.4); }
         .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
-        .modal-content { background: #1e293b; width: 100%; max-width: 600px; padding: 25px; border-radius: 16px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #1e293b; width: 100%; max-width: 600px; padding: 25px; border-radius: 18px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.8); }
         .close-btn { color: var(--text-muted); float: right; font-size: 24px; font-weight: bold; cursor: pointer; background: none; border: none; }
-        .add-btn-header { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+        .close-btn:hover { color: #fff; }
+        .add-btn-header { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; box-shadow: 0 4px 15px var(--primary-glow); }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header-flex">
             <div>
-                <h1 style="margin:0; font-size: 20px;">✨ AI Cartoon Hub Pro</h1>
-                <span style="font-size: 11px; color: var(--text-muted);">Modular GitHub Structure</span>
+                <h1 style="margin:0; font-size: 20px; display: flex; align-items: center; gap: 6px;">✨ AI Cartoon Hub Pro</h1>
+                <span style="font-size: 11px; color: var(--text-muted);">Jungle Beat / Munki & Trunk Studio</span>
             </div>
-            <button onclick="openModal()" class="add-btn-header">+ Add New Episode</button>
+            <button onclick="openModal()" class="add-btn-header">+ Add New</button>
         </div>
         
         {% if edit_item %}
@@ -61,7 +65,7 @@
                 <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" value="{{ edit_item[3] }}" required></div>
                 <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc">{{ edit_item[4] }}</textarea></div>
                 <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags" value="{{ edit_item[5] }}"></div>
-                <div class="form-group"><label>5-Min Script Summary</label><textarea name="script">{{ edit_item[6] }}</textarea></div>
+                <div class="form-group"><label>5-Min Script Summary</label><textarea name="script" style="height: 120px;">{{ edit_item[6] }}</textarea></div>
                 <div class="form-group"><label>Reels / TikTok Caption</label><textarea name="reels_tiktok_caption">{{ edit_item[7] }}</textarea></div>
                 <div class="form-group">
                     <label>Production Status</label>
@@ -76,26 +80,29 @@
         {% elif view_item %}
             <a href="/" class="back-link">&larr; Back to Dashboard</a>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h2 style="margin:0;">{{ view_item[1] }} - {{ view_item[2] }}</h2>
-                <a href="/export/{{ view_item[0] }}" class="btn-action bg-export" style="padding: 8px 14px;">📥 Export .txt</a>
+                <h2 style="margin:0; font-size: 18px; color: var(--accent);">{{ view_item[1] }} - {{ view_item[2] }}</h2>
+                <a href="/export/{{ view_item[0] }}" class="btn-action bg-export" style="padding: 8px 14px; font-size: 13px;">📥 Export .txt</a>
             </div>
-            <button class="bulk-copy-btn" onclick="copyAllData()">🚀 Copy All Metadata</button>
+            <button class="bulk-copy-btn" onclick="copyAllData()">🚀 Copy All Metadata (All-in-One)</button>
+            
             <div class="card"><h3>YouTube Title <button class="copy-btn" onclick="copyText('yt_t')">📋 Copy</button></h3><pre id="yt_t">{{ view_item[3] }}</pre></div>
-            <div class="card"><h3>YouTube Description <button class="copy-btn" onclick="copyText('yt_d')">📋 Copy</button></h3><pre id="yt_d">{{ view_item[4] }}</pre></div>
-            <div class="card"><h3>YouTube Tags <button class="copy-btn" onclick="copyText('yt_tag')">📋 Copy</button></h3><pre id="yt_tag">{{ view_item[5] }}</pre></div>
-            <div class="card"><h3>5-Minute Script <button class="copy-btn" onclick="copyText('scr')">📋 Copy</button></h3><pre id="scr">{{ view_item[6] }}</pre></div>
-            <div class="card"><h3>Reels / TikTok Caption <button class="copy-btn" onclick="copyText('cap')">📋 Copy</button></h3><pre id="cap">{{ view_item[7] }}</pre></div>
+            <div class="card"><h3>YouTube Description <button class="copy-btn" onclick="copyText('yt_d')">📋 Copy</button></h3><pre id="yt_d">{{ view_item[4] if view_item[4] else 'No description.' }}</pre></div>
+            <div class="card"><h3>YouTube Tags <button class="copy-btn" onclick="copyText('yt_tag')">📋 Copy</button></h3><pre id="yt_tag">{{ view_item[5] if view_item[5] else 'No tags.' }}</pre></div>
+            <div class="card"><h3>5-Minute Script <button class="copy-btn" onclick="copyText('scr')">📋 Copy</button></h3><pre id="scr">{{ view_item[6] if view_item[6] else 'No script.' }}</pre></div>
+            <div class="card"><h3>Reels / TikTok Caption <button class="copy-btn" onclick="copyText('cap')">📋 Copy</button></h3><pre id="cap">{{ view_item[7] if view_item[7] else 'No caption.' }}</pre></div>
         {% else %}
-            <h2>Dashboard: Saved Episodes</h2>
-            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search episodes..." onkeyup="filterTable()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin:0; font-size: 18px;">Saved Episodes Dashboard</h2>
+            </div>
+            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search episodes by number or title..." onkeyup="filterTable()">
             {% if episodes %}
                 <table id="episodeTable">
                     <tr><th>Ep</th><th>Title & Status</th><th>Actions</th></tr>
                     {% for ep in episodes %}
                     <tr class="episode-row">
-                        <td><strong style="color: var(--accent);">{{ ep[1] }}</strong></td>
+                        <td><strong style="color: var(--accent); font-size: 15px;">{{ ep[1] }}</strong></td>
                         <td>
-                            <div style="font-weight: 600; margin-bottom: 3px;">{{ ep[2] }}</div>
+                            <div style="font-weight: 600; margin-bottom: 2px;">{{ ep[2] }}</div>
                             {% set st = ep[4] if ep[4] else 'Script Ready' %}
                             <span class="badge {% if st == 'Published' %}status-pub{% elif st == 'In Production' %}status-prod{% else %}status-ready{% endif %}">{{ st }}</span>
                         </td>
@@ -103,14 +110,14 @@
                             <div class="actions">
                                 <a href="/view_ep/{{ ep[0] }}" class="btn-action bg-view">View</a>
                                 <a href="/edit/{{ ep[0] }}" class="btn-action bg-edit">Edit</a>
-                                <a href="/delete/{{ ep[0] }}" class="btn-action bg-delete" onclick="return confirm('Delete?');">Del</a>
+                                <a href="/delete/{{ ep[0] }}" class="btn-action bg-delete" onclick="return confirm('Delete this episode?');">Del</a>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
                 </table>
             {% else %}
-                <p style="text-align: center; color: var(--text-muted); padding: 30px;">No episodes found.</p>
+                <p style="text-align: center; color: var(--text-muted); padding: 40px 0;">No episodes saved yet. Click "+ Add New" above!</p>
             {% endif %}
         {% endif %}
     </div>
@@ -118,20 +125,24 @@
     <div id="addModal" class="modal">
         <div class="modal-content">
             <button class="close-btn" onclick="closeModal()">&times;</button>
-            <h2 style="margin-bottom: 15px; font-size: 18px; color: #a78bfa;">✨ Add New Episode</h2>
+            <h2 style="margin-bottom: 15px; font-size: 18px; color: #a78bfa;">✨ Add New AI Episode</h2>
             <form method="POST" action="/add">
                 <div class="form-group"><label>Episode Number</label><input type="text" name="episode_num" placeholder="e.g., S1E2" required></div>
                 <div class="form-group"><label>Episode Name</label><input type="text" name="title" placeholder="Episode Title" required></div>
-                <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" placeholder="YT Title" required></div>
-                <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc"></textarea></div>
-                <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags"></div>
-                <div class="form-group"><label>Script Summary</label><textarea name="script"></textarea></div>
-                <div class="form-group"><label>Reels Caption</label><textarea name="reels_tiktok_caption"></textarea></div>
+                <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" placeholder="Catchy YT Title" required></div>
+                <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc" placeholder="Description & Hashtags..."></textarea></div>
+                <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags" placeholder="tag1, tag2, tag3"></div>
+                <div class="form-group"><label>5-Min Script Summary</label><textarea name="script" placeholder="Scene-by-scene script..."></textarea></div>
+                <div class="form-group"><label>Reels / TikTok Caption</label><textarea name="reels_tiktok_caption" placeholder="Viral caption with emojis..."></textarea></div>
                 <div class="form-group">
-                    <label>Status</label>
-                    <select name="status"><option value="Script Ready">Script Ready</option><option value="In Production">In Production</option><option value="Published">Published</option></select>
+                    <label>Production Status</label>
+                    <select name="status">
+                        <option value="Script Ready" selected>Script Ready</option>
+                        <option value="In Production">In Production</option>
+                        <option value="Published">Published</option>
+                    </select>
                 </div>
-                <button type="submit" class="btn">Save</button>
+                <button type="submit" class="btn">Save to Database</button>
             </form>
         </div>
     </div>
@@ -139,12 +150,16 @@
     <script>
         function openModal() { document.getElementById('addModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+        window.onclick = function(event) {
+            let modal = document.getElementById('addModal');
+            if (event.target == modal) { modal.style.display = "none"; }
+        }
         function copyText(id) {
-            navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('✨ Copied!'));
+            navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('✨ Copied to clipboard!'));
         }
         function copyAllData() {
-            let text = `TITLE: ${document.getElementById('yt_t').innerText}\n\nDESC:\n${document.getElementById('yt_d').innerText}\n\nTAGS:\n${document.getElementById('yt_tag').innerText}\n\nSCRIPT:\n${document.getElementById('scr').innerText}`;
-            navigator.clipboard.writeText(text).then(() => alert('🚀 All Copied!'));
+            let text = `=== YOUTUBE TITLE ===\n${document.getElementById('yt_t').innerText}\n\n=== DESCRIPTION ===\n${document.getElementById('yt_d').innerText}\n\n=== TAGS ===\n${document.getElementById('yt_tag').innerText}\n\n=== SCRIPT ===\n${document.getElementById('scr').innerText}\n\n=== REELS CAPTION ===\n${document.getElementById('cap').innerText}`;
+            navigator.clipboard.writeText(text).then(() => alert('🚀 All Metadata Copied Successfully!'));
         }
         function filterTable() {
             let input = document.getElementById('searchBox').value.toLowerCase();
@@ -154,4 +169,3 @@
     </script>
 </body>
 </html>
-
