@@ -14,6 +14,8 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS episodes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            series_name TEXT DEFAULT 'Munki & Trunk',
+            season_name TEXT DEFAULT 'Season 1',
             episode_num TEXT,
             title TEXT,
             yt_title TEXT,
@@ -31,7 +33,7 @@ def init_db():
 def index():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
-    cursor.execute("SELECT id, episode_num, title, yt_title, status FROM episodes")
+    cursor.execute("SELECT id, series_name, season_name, episode_num, title, yt_title, status FROM episodes ORDER BY id DESC")
     episodes = cursor.fetchall()
     conn.close()
     return render_template('index.html', episodes=episodes, edit_item=None, view_item=None)
@@ -41,9 +43,11 @@ def add():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
-        INSERT INTO episodes (episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ''', (
+        request.form.get('series_name', 'Munki & Trunk'),
+        request.form.get('season_name', 'Season 1'),
         request.form['episode_num'], request.form['title'], request.form['yt_title'],
         request.form['yt_desc'], request.form['yt_tags'], request.form['script'],
         request.form['reels_tiktok_caption'], request.form['status']
@@ -75,12 +79,13 @@ def update(id):
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
-        UPDATE episodes SET episode_num=?, title=?, yt_title=?, yt_desc=?, yt_tags=?, script=?, reels_tiktok_caption=?, status=?
+        UPDATE episodes SET series_name=?, season_name=?, episode_num=?, title=?, yt_title=?, yt_desc=?, yt_tags=?, script=?, reels_tiktok_caption=?, status=?
         WHERE id=?
     ''', (
-        request.form['episode_num'], request.form['title'], request.form['yt_title'],
-        request.form['yt_desc'], request.form['yt_tags'], request.form['script'],
-        request.form['reels_tiktok_caption'], request.form['status'], id
+        request.form['series_name'], request.form['season_name'], request.form['episode_num'],
+        request.form['title'], request.form['yt_title'], request.form['yt_desc'],
+        request.form['yt_tags'], request.form['script'], request.form['reels_tiktok_caption'],
+        request.form['status'], id
     ))
     conn.commit()
     conn.close()
@@ -104,44 +109,46 @@ def export_txt(id):
     conn.close()
     
     if row:
-        content = f"EPISODE: {row[1]} - {row[2]}\nSTATUS: {row[8]}\n\n" \
-                  f"--- YOUTUBE TITLE ---\n{row[3]}\n\n" \
-                  f"--- DESCRIPTION ---\n{row[4]}\n\n" \
-                  f"--- TAGS ---\n{row[5]}\n\n" \
-                  f"--- SCRIPT ---\n{row[6]}\n\n" \
-                  f"--- REELS / TIKTOK CAPTION ---\n{row[7]}\n"
+        content = f"SERIES: {row[1]} | SEASON: {row[2]}\nEPISODE: {row[3]} - {row[4]}\nSTATUS: {row[10]}\n\n" \
+                  f"--- YOUTUBE TITLE ---\n{row[5]}\n\n" \
+                  f"--- DESCRIPTION ---\n{row[6]}\n\n" \
+                  f"--- TAGS ---\n{row[7]}\n\n" \
+                  f"--- SCRIPT ---\n{row[8]}\n\n" \
+                  f"--- REELS / TIKTOK CAPTION ---\n{row[9]}\n"
                   
         return send_file(
             io.BytesIO(content.encode('utf-8')),
             mimetype='text/plain',
             as_attachment=True,
-            download_name=f"{row[1]}_script.txt"
+            download_name=f"{row[3]}_script.txt"
         )
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
     init_db()
     if len(sys.argv) > 1 and sys.argv[1] == 'add':
-        if len(sys.argv) < 5:
-            print("Usage: python app.py add 'Ep_Num' 'Title' 'YT_Title' 'Desc' 'Tags' 'Script' 'Caption' 'Status'")
+        if len(sys.argv) < 6:
+            print("Usage: python app.py add 'Series' 'Season' 'Ep_Num' 'Title' 'YT_Title' 'Desc' 'Tags' 'Script' 'Caption' 'Status'")
         else:
-            ep_num = sys.argv[2]
-            title = sys.argv[3]
-            yt_title = sys.argv[4]
-            yt_desc = sys.argv[5] if len(sys.argv) > 5 else ""
-            yt_tags = sys.argv[6] if len(sys.argv) > 6 else ""
-            script = sys.argv[7] if len(sys.argv) > 7 else ""
-            caption = sys.argv[8] if len(sys.argv) > 8 else ""
-            status = sys.argv[9] if len(sys.argv) > 9 else "Script Ready"
+            series = sys.argv[2]
+            season = sys.argv[3]
+            ep_num = sys.argv[4]
+            title = sys.argv[5]
+            yt_title = sys.argv[6] if len(sys.argv) > 6 else ""
+            yt_desc = sys.argv[7] if len(sys.argv) > 7 else ""
+            yt_tags = sys.argv[8] if len(sys.argv) > 8 else ""
+            script = sys.argv[9] if len(sys.argv) > 9 else ""
+            caption = sys.argv[10] if len(sys.argv) > 10 else ""
+            status = sys.argv[11] if len(sys.argv) > 11 else "Script Ready"
 
             conn = sqlite3.connect(DB_NAME)
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO episodes (episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (ep_num, title, yt_title, yt_desc, yt_tags, script, caption, status))
+                INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (series, season, ep_num, title, yt_title, yt_desc, yt_tags, script, caption, status))
             conn.commit()
             conn.close()
-            print(f"[+] Success! Episode {ep_num} added to database via CLI.")
+            print(f"[+] Success! [{series} - {season} {ep_num}] added via CLI.")
     else:
         app.run(host='0.0.0.0', port=8080)
