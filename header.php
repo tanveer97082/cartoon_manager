@@ -1,5 +1,5 @@
 <?php
-$current_page = basename($_SERVER['PHP_SELF']);
+$current_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 ?>
 <style>
     .studio-header { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 18px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
@@ -19,9 +19,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <div class="studio-subtitle">Enterprise Studio Analytics & Command Center</div>
     
     <div class="nav-grid">
-        <a href="index.php" class="nav-btn <?= ($current_page == 'index.php') ? 'active' : '' ?>">📊 Dashboard</a>
-        <a href="episodes.php" class="nav-btn <?= ($current_page == 'episodes.php') ? 'active' : '' ?>">🎬 Episodes</a>
-        <a href="add_edit.php" class="nav-btn <?= ($current_page == 'add_edit.php') ? 'active' : '' ?>">➕ Add Episode</a>
-        <a href="excel_studio.php" class="nav-btn <?= ($current_page == 'excel_studio.php') ? 'active' : '' ?>">📂 Excel Studio</a>
+        <a href="/" class="nav-btn <?= ($current_uri == '/' || $current_uri == '/index') ? 'active' : '' ?>">📊 Dashboard</a>
+        <a href="/episodes" class="nav-btn <?= ($current_uri == '/episodes') ? 'active' : '' ?>">🎬 Episodes</a>
+        <a href="/add_edit" class="nav-btn <?= ($current_uri == '/add_edit') ? 'active' : '' ?>">➕ Add Episode</a>
+        <a href="/excel_studio" class="nav-btn <?= ($current_uri == '/excel_studio') ? 'active' : '' ?>">📂 Excel Studio</a>
     </div>
 </div>
