@@ -25,7 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_column'])) {
 if (isset($_GET['delete_id'])) {
     $stmt = $db->prepare("DELETE FROM episodes WHERE id = ?");
     $stmt->execute([$_GET['delete_id']]);
-    header("Location: export_import.php");
+    header("Location: excel_studio.php");
     exit;
 }
 
@@ -132,7 +132,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>✨ Ultimate Excel Database Studio</title>
+    <title>✨ Excel Database Studio</title>
     <style>
         :root { 
             --bg: #030712; --card: #0f172a; --border: rgba(255, 255, 255, 0.1);
@@ -141,17 +141,16 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
         .wrapper { max-width: 100%; width: 100%; box-sizing: border-box; margin: auto; }
         
-        .excel-ribbon { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 18px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 14px; }
-        .ribbon-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
-        .ribbon-bottom { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-        
-        .grid-title { font-weight: 800; color: #fff; font-size: 16px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.3px; }
-        .search-input { padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 13px; width: 100%; max-width: 260px; }
+        .excel-ribbon { background: var(--card); border: 1px solid var(--border); padding: 14px 18px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .ribbon-left { display: flex; align-items: center; gap: 12px; flex-grow: 1; min-width: 220px; }
+        .grid-title { font-weight: 800; color: #fff; font-size: 15px; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+        .search-input { padding: 9px 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 9px; color: #fff; font-size: 13px; width: 100%; }
         .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
 
-        .excel-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
-        .excel-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
-        .btn-save { background: linear-gradient(135deg, #059669, #10b981); border-color: #059669; color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
+        .ribbon-right { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .icon-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); width: 38px; height: 38px; border-radius: 10px; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s; text-decoration: none; }
+        .icon-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .btn-save { background: linear-gradient(135deg, #059669, #10b981); border-color: #059669; color: white; }
 
         .spreadsheet-container { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); max-height: 72vh; }
         table { width: max-content; border-collapse: collapse; text-align: left; font-size: 13px; }
@@ -173,8 +172,8 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         .dropdown:hover .dropdown-content { display: block; }
 
         .batch-actions-menu { position: relative; display: inline-block; }
-        .batch-btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
-        .batch-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .batch-btn { background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #c084fc; width: 38px; height: 38px; border-radius: 10px; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+        .batch-btn:disabled { opacity: 0.3; cursor: not-allowed; background: rgba(255,255,255,0.03); border-color: var(--border); color: var(--muted); }
         .batch-content { display: none; position: absolute; left: 0; background: #1e293b; min-width: 150px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
         .batch-content button { color: var(--text); padding: 10px 14px; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
         .batch-content button:hover { background: var(--primary); color: #fff; }
@@ -195,23 +194,28 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
             <input type="hidden" name="bulk_action" id="bulkActionInput" value="">
 
             <div class="excel-ribbon">
-                <div class="ribbon-top">
-                    <div class="grid-title">📊 Excel Studio Grid</div>
+                <div class="ribbon-left">
+                    <div class="grid-title">📊 Excel Studio</div>
                     <input type="text" id="gridSearch" class="search-input" placeholder="🔍 Quick search grid..." onkeyup="filterGrid()">
                 </div>
-                <div class="ribbon-bottom">
-                    <button type="submit" name="save_all_columns" class="excel-btn btn-save">💾 Save All Changes</button>
+                <div class="ribbon-right">
+                    <!-- Save Changes Icon Button -->
+                    <button type="submit" name="save_all_columns" class="icon-btn btn-save" title="Save All Changes">💾</button>
                     
+                    <!-- Batch Actions Icon Button -->
                     <div class="batch-actions-menu">
-                        <button type="button" id="batchBtn" class="batch-btn" disabled>⚙️ Batch Actions ▾</button>
+                        <button type="button" id="batchBtn" class="batch-btn" title="Batch Actions" disabled>⚙️</button>
                         <div class="batch-content">
                             <button type="submit" onclick="submitBulk('delete_selected')" style="color:#f87171;">🗑️ Delete Selected</button>
                             <button type="submit" onclick="submitBulk('export_selected')">📥 Export Selected</button>
                         </div>
                     </div>
 
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('addRowModal').style.display='flex';" class="excel-btn">➕ Insert Row</a>
-                    <a href="#" onclick="event.preventDefault(); document.getElementById('addColumnModal').style.display='flex';" class="excel-btn">⚙️ Add Column</a>
+                    <!-- Insert Row Icon Button -->
+                    <button type="button" onclick="document.getElementById('addRowModal').style.display='flex';" class="icon-btn" title="Insert New Row">➕</button>
+                    
+                    <!-- Add Column Icon Button -->
+                    <button type="button" onclick="document.getElementById('addColumnModal').style.display='flex';" class="icon-btn" title="Add New Column">📌</button>
                 </div>
             </div>
 
@@ -225,7 +229,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                                 $arrow = (isset($_GET['col']) && $_GET['col'] === $col) ? (($_GET['dir'] ?? 'asc') === 'asc' ? '↑' : '↓') : '↕';
                             ?>
                             <th>
-                                <a href="export_import.php?col=<?= $col ?>&dir=<?= $next_dir ?>">
+                                <a href="excel_studio.php?col=<?= $col ?>&dir=<?= $next_dir ?>">
                                     <?= htmlspecialchars(str_replace('_', ' ', $col)) ?> <span><?= $arrow ?></span>
                                 </a>
                             </th>
@@ -263,7 +267,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                                     <div class="dropdown-content">
                                         <a href="add_edit.php?action=view&id=<?= $r['id'] ?>">👁️ View Data</a>
                                         <button type="button" onclick="copyEpisodeData(<?= htmlspecialchars(json_encode($r)) ?>)">📋 Copy Next Ep Data</button>
-                                        <a href="export_import.php?delete_id=<?= $r['id'] ?>" onclick="return confirm('Delete this row?');" style="color:#f87171;">🗑️ Delete</a>
+                                        <a href="excel_studio.php?delete_id=<?= $r['id'] ?>" onclick="return confirm('Delete this row?');" style="color:#f87171;">🗑️ Delete</a>
                                     </div>
                                 </div>
                             </td>
@@ -287,8 +291,8 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                 <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE NUMBER</label><input type="text" name="new_ep" placeholder="S1E5" class="cell-input" style="width:100%;" required></div>
                 <div style="margin-bottom: 16px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE TITLE</label><input type="text" name="new_title" placeholder="Title" class="cell-input" style="width:100%;" required></div>
                 <div style="display:flex; gap:10px;">
-                    <button type="submit" name="add_row" class="excel-btn btn-save" style="flex:1; justify-content:center;">Insert Row</button>
-                    <button type="button" onclick="document.getElementById('addRowModal').style.display='none';" class="excel-btn" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1);">Cancel</button>
+                    <button type="submit" name="add_row" class="excel-btn btn-save" style="flex:1; justify-content:center; height:40px;">Insert Row</button>
+                    <button type="button" onclick="document.getElementById('addRowModal').style.display='none';" class="icon-btn" style="width:auto; padding:0 16px; background:rgba(255,255,255,0.1); font-size:13px; font-weight:600;">Cancel</button>
                 </div>
             </form>
         </div>
@@ -303,8 +307,8 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                     <input type="text" name="column_name" placeholder="column_name" class="cell-input" style="width:100%; margin-top:6px;" required>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button type="submit" name="add_column" class="excel-btn btn-save" style="flex:1; justify-content:center;">Create Column</button>
-                    <button type="button" onclick="document.getElementById('addColumnModal').style.display='none';" class="excel-btn" style="flex:1; justify-content:center; background:rgba(255,255,255,0.1);">Cancel</button>
+                    <button type="submit" name="add_column" class="excel-btn btn-save" style="flex:1; justify-content:center; height:40px;">Create Column</button>
+                    <button type="button" onclick="document.getElementById('addColumnModal').style.display='none';" class="icon-btn" style="width:auto; padding:0 16px; background:rgba(255,255,255,0.1); font-size:13px; font-weight:600;">Cancel</button>
                 </div>
             </form>
         </div>
