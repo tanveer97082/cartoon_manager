@@ -1,6 +1,5 @@
 <?php
 require_once 'config.php';
-
 $action = $_GET['action'] ?? 'add';
 $id = $_GET['id'] ?? null;
 $item = null;
@@ -40,79 +39,87 @@ if ($id) {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>✨ Episode Form</title>
+    <title>✨ Studio Form</title>
     <style>
-        :root { --bg-deep: #030712; --card-bg: rgba(30, 41, 59, 0.85); --primary: #8b5cf6; --accent: #06b6d4; --text: #f3f4f6; --text-muted: #9ca3af; --border: rgba(255, 255, 255, 0.12); }
-        body { font-family: system-ui, sans-serif; background: var(--bg-deep); color: var(--text); margin: 0; padding: 15px; min-height: 100vh; }
-        .container { max-width: 820px; margin: auto; background: var(--card-bg); backdrop-filter: blur(16px); padding: 22px; border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.7); }
-        h1, h2 { color: #fff; margin-top: 0; }
-        .btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; }
-        .form-group { margin-bottom: 14px; }
-        label { display: block; margin-bottom: 6px; font-size: 12px; color: var(--accent); font-weight: 700; text-transform: uppercase; }
-        input, textarea, select { width: 100%; padding: 11px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box; font-size: 14px; }
-        textarea { height: 85px; resize: vertical; }
-        .back-link { display: inline-block; margin-bottom: 15px; color: var(--accent); text-decoration: none; font-weight: 600; }
-        .card { background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
-        .card h3 { margin-top: 0; color: var(--accent); font-size: 14px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; }
-        .copy-btn { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-        .bulk-copy-btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 16px; }
-        pre { white-space: pre-wrap; font-family: inherit; margin: 8px 0 0 0; color: #e2e8f0; font-size: 13px; background: rgba(30, 41, 59, 0.6); padding: 12px; border-radius: 8px; border: 1px solid var(--border); max-height: 160px; overflow-y: auto; }
-        .btn-action { padding: 6px 12px; font-size: 12px; border-radius: 6px; text-decoration: none; color: white; font-weight: 600; display: inline-block; }
-        .bg-export { background: #2563eb; }
+        :root { 
+            --bg: #090d16; --card: #111827; --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #8b5cf6; --accent: #06b6d4; --text: #f3f4f6; --muted: #9ca3af;
+        }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 16px; }
+        .wrapper { max-width: 800px; margin: auto; }
+        .card-box { background: var(--card); border: 1px solid var(--card-border); padding: 24px; border-radius: 18px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        h2 { margin-top: 0; color: #fff; font-size: 20px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, textarea, select { width: 100%; padding: 12px 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text); box-sizing: border-box; font-size: 14px; }
+        textarea { height: 100px; resize: vertical; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
+        .btn-submit { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 700; width: 100%; font-size: 15px; box-shadow: 0 4px 15px rgba(139,92,246,0.4); }
+        .back-btn { display: inline-block; margin-bottom: 15px; color: var(--accent); text-decoration: none; font-weight: 600; font-size: 14px; }
+        
+        /* View Metadata Styles */
+        .meta-card { background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); padding: 16px; border-radius: 12px; margin-bottom: 14px; }
+        .meta-card h3 { margin: 0 0 8px 0; color: var(--accent); font-size: 12px; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .copy-btn { background: rgba(139,92,246,0.2); color: #c084fc; border: 1px solid rgba(139,92,246,0.4); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        pre { white-space: pre-wrap; font-family: inherit; margin: 0; color: #e2e8f0; font-size: 13px; max-height: 150px; overflow-y: auto; }
+        .bulk-btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-bottom: 16px; font-size: 14px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <a href="episodes.php" class="back-link">&larr; Back to Episode Manager</a>
-
-        <?php if ($action === 'view' && $item): ?>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div>
-                    <span style="font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase;"><?= htmlspecialchars($item['series_name']) ?> | <?= htmlspecialchars($item['season_name']) ?></span>
-                    <h2 style="margin:2px 0 0 0; font-size: 17px; color: #fff;"><?= htmlspecialchars($item['episode_num']) ?> - <?= htmlspecialchars($item['title']) ?></h2>
+    <div class="wrapper">
+        <a href="episodes.php" class="back-btn">&larr; Back to Episodes</a>
+        
+        <div class="card-box">
+            <?php if ($action === 'view' && $item): ?>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <span style="font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase;"><?= htmlspecialchars($item['series_name']) ?> | <?= htmlspecialchars($item['season_name']) ?></span>
+                        <h2 style="margin:2px 0 0 0; color: #fff;"><?= htmlspecialchars($item['episode_num']) ?> - <?= htmlspecialchars($item['title']) ?></h2>
+                    </div>
+                    <a href="episodes.php?action=export_txt&id=<?= $item['id'] ?>" class="btn-act bg-view" style="background:#2563eb; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:600; color:#fff; font-size:13px;">📥 Export txt</a>
                 </div>
-                <a href="episodes.php?action=export_txt&id=<?= $item['id'] ?>" class="btn-action bg-export">📥 Export .txt</a>
-            </div>
-            <button class="bulk-copy-btn" onclick="copyAllData()">🚀 Copy All Metadata</button>
-            <div class="card"><h3>YouTube Title <button class="copy-btn" onclick="copyText('yt_t')">📋 Copy</button></h3><pre id="yt_t"><?= htmlspecialchars($item['yt_title']) ?></pre></div>
-            <div class="card"><h3>YouTube Description <button class="copy-btn" onclick="copyText('yt_d')">📋 Copy</button></h3><pre id="yt_d"><?= htmlspecialchars($item['yt_desc']) ?></pre></div>
-            <div class="card"><h3>YouTube Tags <button class="copy-btn" onclick="copyText('yt_tag')">📋 Copy</button></h3><pre id="yt_tag"><?= htmlspecialchars($item['yt_tags']) ?></pre></div>
-            <div class="card"><h3>5-Min Script <button class="copy-btn" onclick="copyText('scr')">📋 Copy</button></h3><pre id="scr"><?= htmlspecialchars($item['script']) ?></pre></div>
-            <div class="card"><h3>Reels Caption <button class="copy-btn" onclick="copyText('cap')">📋 Copy</button></h3><pre id="cap"><?= htmlspecialchars($item['reels_tiktok_caption']) ?></pre></div>
-            <div class="card"><h3>Thumbnail Prompt <button class="copy-btn" onclick="copyText('thumb')">📋 Copy</button></h3><pre id="thumb"><?= htmlspecialchars($item['thumbnail_prompt']) ?></pre></div>
+                <button class="bulk-btn" onclick="copyAll()">🚀 Copy All Metadata (All-in-One)</button>
+                
+                <div class="meta-card"><h3>YouTube Title <button class="copy-btn" onclick="cp('yt_t')">Copy</button></h3><pre id="yt_t"><?= htmlspecialchars($item['yt_title']) ?></pre></div>
+                <div class="meta-card"><h3>YouTube Description <button class="copy-btn" onclick="cp('yt_d')">Copy</button></h3><pre id="yt_d"><?= htmlspecialchars($item['yt_desc'] ?: 'None') ?></pre></div>
+                <div class="meta-card"><h3>YouTube Tags <button class="copy-btn" onclick="cp('yt_tag')">Copy</button></h3><pre id="yt_tag"><?= htmlspecialchars($item['yt_tags'] ?: 'None') ?></pre></div>
+                <div class="meta-card"><h3>5-Min Script Summary <button class="copy-btn" onclick="cp('scr')">Copy</button></h3><pre id="scr"><?= htmlspecialchars($item['script'] ?: 'None') ?></pre></div>
+                <div class="meta-card"><h3>Reels / TikTok Caption <button class="copy-btn" onclick="cp('cap')">Copy</button></h3><pre id="cap"><?= htmlspecialchars($item['reels_tiktok_caption'] ?: 'None') ?></pre></div>
+                <div class="meta-card"><h3>Thumbnail Prompt <button class="copy-btn" onclick="cp('thumb')">Copy</button></h3><pre id="thumb"><?= htmlspecialchars($item['thumbnail_prompt'] ?: 'None') ?></pre></div>
 
-        <?php else: ?>
-            <h2><?= $item ? 'Edit Episode' : 'Add New Episode' ?></h2>
-            <form method="POST" action="add_edit.php">
-                <input type="hidden" name="id" value="<?= $item['id'] ?? '' ?>">
-                <div class="form-group"><label>Series Name</label><input type="text" name="series_name" value="<?= htmlspecialchars($item['series_name'] ?? 'Munki & Trunk') ?>" required></div>
-                <div class="form-group"><label>Season Name</label><input type="text" name="season_name" value="<?= htmlspecialchars($item['season_name'] ?? 'Season 1') ?>" required></div>
-                <div class="form-group"><label>Episode Number</label><input type="text" name="episode_num" value="<?= htmlspecialchars($item['episode_num'] ?? '') ?>" placeholder="S1E1" required></div>
-                <div class="form-group"><label>Episode Title</label><input type="text" name="title" value="<?= htmlspecialchars($item['title'] ?? '') ?>" placeholder="Title" required></div>
-                <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" value="<?= htmlspecialchars($item['yt_title'] ?? '') ?>" required></div>
-                <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc"><?= htmlspecialchars($item['yt_desc'] ?? '') ?></textarea></div>
-                <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags" value="<?= htmlspecialchars($item['yt_tags'] ?? '') ?>"></div>
-                <div class="form-group"><label>5-Min Script Summary</label><textarea name="script" style="height: 120px;"><?= htmlspecialchars($item['script'] ?? '') ?></textarea></div>
-                <div class="form-group"><label>Reels / TikTok Caption</label><textarea name="reels_tiktok_caption"><?= htmlspecialchars($item['reels_tiktok_caption'] ?? '') ?></textarea></div>
-                <div class="form-group"><label>Thumbnail Prompt</label><textarea name="thumbnail_prompt"><?= htmlspecialchars($item['thumbnail_prompt'] ?? '') ?></textarea></div>
-                <div class="form-group">
-                    <label>Production Status</label>
-                    <select name="status">
-                        <option value="Script Ready" <?= ($item && $item['status']=='Script Ready')?'selected':'' ?>>Script Ready</option>
-                        <option value="In Production" <?= ($item && $item['status']=='In Production')?'selected':'' ?>>In Production</option>
-                        <option value="Published" <?= ($item && $item['status']=='Published')?'selected':'' ?>>Published</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn"><?= $item ? 'Update Episode' : 'Save Episode' ?></button>
-            </form>
-        <?php endif; ?>
+                <script>
+                    function cp(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('Copied!')); }
+                    function copyAll() {
+                        let t = `YT TITLE:\n${document.getElementById('yt_t').innerText}\n\nDESC:\n${document.getElementById('yt_d').innerText}\n\nTAGS:\n${document.getElementById('yt_tag').innerText}\n\nSCRIPT:\n${document.getElementById('scr').innerText}`;
+                        navigator.clipboard.writeText(t).then(() => alert('All Metadata Copied!'));
+                    }
+                </script>
+            <?php else: ?>
+                <h2><?= $item ? 'Edit Episode' : 'Add New Episode' ?></h2>
+                <form method="POST" action="add_edit.php">
+                    <input type="hidden" name="id" value="<?= $item['id'] ?? '' ?>">
+                    <div class="form-group"><label>Series Name</label><input type="text" name="series_name" value="<?= htmlspecialchars($item['series_name'] ?? 'Munki & Trunk') ?>" required></div>
+                    <div class="form-group"><label>Season Name</label><input type="text" name="season_name" value="<?= htmlspecialchars($item['season_name'] ?? 'Season 1') ?>" required></div>
+                    <div class="form-group"><label>Episode Number</label><input type="text" name="episode_num" value="<?= htmlspecialchars($item['episode_num'] ?? '') ?>" placeholder="e.g. S1E1" required></div>
+                    <div class="form-group"><label>Episode Title</label><input type="text" name="title" value="<?= htmlspecialchars($item['title'] ?? '') ?>" placeholder="Episode Title" required></div>
+                    <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" value="<?= htmlspecialchars($item['yt_title'] ?? '') ?>" required></div>
+                    <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc"><?= htmlspecialchars($item['yt_desc'] ?? '') ?></textarea></div>
+                    <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags" value="<?= htmlspecialchars($item['yt_tags'] ?? '') ?>"></div>
+                    <div class="form-group"><label>5-Min Script Summary</label><textarea name="script"><?= htmlspecialchars($item['script'] ?? '') ?></textarea></div>
+                    <div class="form-group"><label>Reels / TikTok Caption</label><textarea name="reels_tiktok_caption"><?= htmlspecialchars($item['reels_tiktok_caption'] ?? '') ?></textarea></div>
+                    <div class="form-group"><label>Thumbnail Prompt (AI Image)</label><textarea name="thumbnail_prompt"><?= htmlspecialchars($item['thumbnail_prompt'] ?? '') ?></textarea></div>
+                    <div class="form-group">
+                        <label>Production Status</label>
+                        <select name="status">
+                            <option value="Script Ready" <?= ($item && $item['status']=='Script Ready')?'selected':'' ?>>Script Ready</option>
+                            <option value="In Production" <?= ($item && $item['status']=='In Production')?'selected':'' ?>>In Production</option>
+                            <option value="Published" <?= ($item && $item['status']=='Published')?'selected':'' ?>>Published</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-submit"><?= $item ? 'Update Episode' : 'Save Episode' ?></button>
+                </form>
+            <?php endif; ?>
+        </div>
     </div>
-    <script>
-        function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('Copied!')); }
-        function copyAllData() {
-            let text = `YT TITLE: ${document.getElementById('yt_t').innerText}\n\nDESC:\n${document.getElementById('yt_d').innerText}\n\nTAGS:\n${document.getElementById('yt_tag').innerText}\n\nSCRIPT:\n${document.getElementById('scr').innerText}`;
-            navigator.clipboard.writeText(text).then(() => alert('All Copied!'));
-        }
-    </script>
 </body>
 </html>
