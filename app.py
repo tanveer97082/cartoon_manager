@@ -1,4 +1,3 @@
-cat << 'EOF' > app.py
 from flask import Flask, render_template, request, redirect, url_for, send_file
 import sqlite3
 import io
@@ -147,4 +146,3 @@ if __name__ == '__main__':
             print(f"[+] Success! Episode {ep_num} added to database via CLI.")
     else:
         app.run(host='0.0.0.0', port=8080)
-EOF
