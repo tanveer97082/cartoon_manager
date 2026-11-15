@@ -1,1 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>✨ AI Cartoon Hub Pro</title>
+    <style>
+        :root { 
+            --bg-deep: #030712; --card-bg: rgba(30, 41, 59, 0.75); 
+            --primary: #8b5cf6; --primary-glow: rgba(139, 92, 246, 0.4);
+            --accent: #06b6d4; --text: #f3f4f6; --text-muted: #9ca3af; --border: rgba(255, 255, 255, 0.1); 
+        }
+        body { font-family: system-ui, sans-serif; background: var(--bg-deep); color: var(--text); margin: 0; padding: 15px; min-height: 100vh; }
+        .container { max-width: 780px; margin: auto; background: var(--card-bg); backdrop-filter: blur(12px); padding: 22px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.6); }
+        h1, h2 { color: #fff; margin-top: 0; }
+        .btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; width: 100%; font-size: 15px; }
+        .form-group { margin-bottom: 14px; }
+        label { display: block; margin-bottom: 6px; font-size: 13px; color: var(--accent); font-weight: 600; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 11px; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); border-radius: 8px; color: var(--text); box-sizing: border-box; font-size: 14px; }
+        textarea { height: 85px; resize: vertical; }
+        .search-box { width: 100%; padding: 12px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); border-radius: 10px; color: white; font-size: 14px; margin-bottom: 20px; box-sizing: border-box; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 14px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        th { background: rgba(17, 24, 39, 0.8); color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+        .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+        .btn-action { padding: 6px 10px; font-size: 12px; border-radius: 6px; text-decoration: none; color: white; font-weight: 600; display: inline-block; }
+        .bg-view { background: #059669; } .bg-edit { background: #d97706; } .bg-delete { background: #dc2626; } .bg-export { background: #2563eb; }
+        .back-link { display: inline-block; margin-bottom: 15px; color: var(--accent); text-decoration: none; font-weight: 600; }
+        .card { background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); padding: 16px; border-radius: 10px; margin-bottom: 15px; }
+        .card h3 { margin-top: 0; color: var(--accent); font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .copy-btn { background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .bulk-copy-btn { background: linear-gradient(135deg, #06b6d4, #3b82f6); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 15px; }
+        pre { white-space: pre-wrap; font-family: inherit; margin: 8px 0 0 0; color: #e2e8f0; font-size: 13px; background: rgba(30, 41, 59, 0.5); padding: 12px; border-radius: 8px; border: 1px solid var(--border); max-height: 160px; overflow-y: auto; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
+        .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+        .status-ready { background: rgba(5, 150, 105, 0.2); color: #34d399; }
+        .status-prod { background: rgba(217, 119, 6, 0.2); color: #fbbf24; }
+        .status-pub { background: rgba(37, 99, 235, 0.2); color: #60a5fa; }
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 15px; box-sizing: border-box; }
+        .modal-content { background: #1e293b; width: 100%; max-width: 600px; padding: 25px; border-radius: 16px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .close-btn { color: var(--text-muted); float: right; font-size: 24px; font-weight: bold; cursor: pointer; background: none; border: none; }
+        .add-btn-header { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-flex">
+            <div>
+                <h1 style="margin:0; font-size: 20px;">✨ AI Cartoon Hub Pro</h1>
+                <span style="font-size: 11px; color: var(--text-muted);">Modular GitHub Structure</span>
+            </div>
+            <button onclick="openModal()" class="add-btn-header">+ Add New Episode</button>
+        </div>
+        
+        {% if edit_item %}
+            <a href="/" class="back-link">&larr; Back to Dashboard</a>
+            <h2>Edit Episode ({{ edit_item[1] }})</h2>
+            <form method="POST" action="/update/{{ edit_item[0] }}">
+                <div class="form-group"><label>Episode Number</label><input type="text" name="episode_num" value="{{ edit_item[1] }}" required></div>
+                <div class="form-group"><label>Episode Name</label><input type="text" name="title" value="{{ edit_item[2] }}" required></div>
+                <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" value="{{ edit_item[3] }}" required></div>
+                <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc">{{ edit_item[4] }}</textarea></div>
+                <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags" value="{{ edit_item[5] }}"></div>
+                <div class="form-group"><label>5-Min Script Summary</label><textarea name="script">{{ edit_item[6] }}</textarea></div>
+                <div class="form-group"><label>Reels / TikTok Caption</label><textarea name="reels_tiktok_caption">{{ edit_item[7] }}</textarea></div>
+                <div class="form-group">
+                    <label>Production Status</label>
+                    <select name="status">
+                        <option value="Script Ready" {% if edit_item[8]=='Script Ready' %}selected{% endif %}>Script Ready</option>
+                        <option value="In Production" {% if edit_item[8]=='In Production' %}selected{% endif %}>In Production</option>
+                        <option value="Published" {% if edit_item[8]=='Published' %}selected{% endif %}>Published</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Update Metadata</button>
+            </form>
+        {% elif view_item %}
+            <a href="/" class="back-link">&larr; Back to Dashboard</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin:0;">{{ view_item[1] }} - {{ view_item[2] }}</h2>
+                <a href="/export/{{ view_item[0] }}" class="btn-action bg-export" style="padding: 8px 14px;">📥 Export .txt</a>
+            </div>
+            <button class="bulk-copy-btn" onclick="copyAllData()">🚀 Copy All Metadata</button>
+            <div class="card"><h3>YouTube Title <button class="copy-btn" onclick="copyText('yt_t')">📋 Copy</button></h3><pre id="yt_t">{{ view_item[3] }}</pre></div>
+            <div class="card"><h3>YouTube Description <button class="copy-btn" onclick="copyText('yt_d')">📋 Copy</button></h3><pre id="yt_d">{{ view_item[4] }}</pre></div>
+            <div class="card"><h3>YouTube Tags <button class="copy-btn" onclick="copyText('yt_tag')">📋 Copy</button></h3><pre id="yt_tag">{{ view_item[5] }}</pre></div>
+            <div class="card"><h3>5-Minute Script <button class="copy-btn" onclick="copyText('scr')">📋 Copy</button></h3><pre id="scr">{{ view_item[6] }}</pre></div>
+            <div class="card"><h3>Reels / TikTok Caption <button class="copy-btn" onclick="copyText('cap')">📋 Copy</button></h3><pre id="cap">{{ view_item[7] }}</pre></div>
+        {% else %}
+            <h2>Dashboard: Saved Episodes</h2>
+            <input type="text" id="searchBox" class="search-box" placeholder="🔍 Search episodes..." onkeyup="filterTable()">
+            {% if episodes %}
+                <table id="episodeTable">
+                    <tr><th>Ep</th><th>Title & Status</th><th>Actions</th></tr>
+                    {% for ep in episodes %}
+                    <tr class="episode-row">
+                        <td><strong style="color: var(--accent);">{{ ep[1] }}</strong></td>
+                        <td>
+                            <div style="font-weight: 600; margin-bottom: 3px;">{{ ep[2] }}</div>
+                            {% set st = ep[4] if ep[4] else 'Script Ready' %}
+                            <span class="badge {% if st == 'Published' %}status-pub{% elif st == 'In Production' %}status-prod{% else %}status-ready{% endif %}">{{ st }}</span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <a href="/view_ep/{{ ep[0] }}" class="btn-action bg-view">View</a>
+                                <a href="/edit/{{ ep[0] }}" class="btn-action bg-edit">Edit</a>
+                                <a href="/delete/{{ ep[0] }}" class="btn-action bg-delete" onclick="return confirm('Delete?');">Del</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p style="text-align: center; color: var(--text-muted); padding: 30px;">No episodes found.</p>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
+            <h2 style="margin-bottom: 15px; font-size: 18px; color: #a78bfa;">✨ Add New Episode</h2>
+            <form method="POST" action="/add">
+                <div class="form-group"><label>Episode Number</label><input type="text" name="episode_num" placeholder="e.g., S1E2" required></div>
+                <div class="form-group"><label>Episode Name</label><input type="text" name="title" placeholder="Episode Title" required></div>
+                <div class="form-group"><label>YouTube Title</label><input type="text" name="yt_title" placeholder="YT Title" required></div>
+                <div class="form-group"><label>YouTube Description</label><textarea name="yt_desc"></textarea></div>
+                <div class="form-group"><label>YouTube Tags</label><input type="text" name="yt_tags"></div>
+                <div class="form-group"><label>Script Summary</label><textarea name="script"></textarea></div>
+                <div class="form-group"><label>Reels Caption</label><textarea name="reels_tiktok_caption"></textarea></div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select name="status"><option value="Script Ready">Script Ready</option><option value="In Production">In Production</option><option value="Published">Published</option></select>
+                </div>
+                <button type="submit" class="btn">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openModal() { document.getElementById('addModal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('addModal').style.display = 'none'; }
+        function copyText(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('✨ Copied!'));
+        }
+        function copyAllData() {
+            let text = `TITLE: ${document.getElementById('yt_t').innerText}\n\nDESC:\n${document.getElementById('yt_d').innerText}\n\nTAGS:\n${document.getElementById('yt_tag').innerText}\n\nSCRIPT:\n${document.getElementById('scr').innerText}`;
+            navigator.clipboard.writeText(text).then(() => alert('🚀 All Copied!'));
+        }
+        function filterTable() {
+            let input = document.getElementById('searchBox').value.toLowerCase();
+            let rows = document.getElementsByClassName('episode-row');
+            for (let r of rows) r.style.display = r.innerText.toLowerCase().includes(input) ? "" : "none";
+        }
+    </script>
+</body>
+</html>
 
