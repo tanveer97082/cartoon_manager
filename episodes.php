@@ -24,13 +24,15 @@ if ($action === 'export_txt' && $id) {
     }
 }
 
-// Sorting logic
+// Sorting logic from header clicks
 $sort = $_GET['sort'] ?? 'target_asc';
 $order_sql = "ORDER BY target_date ASC";
-if ($sort === 'az') $order_sql = "ORDER BY title ASC";
-elseif ($sort === 'za') $order_sql = "ORDER BY title DESC";
-elseif ($sort === 'recent') $order_sql = "ORDER BY id DESC";
+if ($sort === 'series_asc') $order_sql = "ORDER BY series_name ASC";
+elseif ($sort === 'series_desc') $order_sql = "ORDER BY series_name DESC";
+elseif ($sort === 'title_asc') $order_sql = "ORDER BY title ASC";
+elseif ($sort === 'title_desc') $order_sql = "ORDER BY title DESC";
 elseif ($sort === 'target_desc') $order_sql = "ORDER BY target_date DESC";
+elseif ($sort === 'recent') $order_sql = "ORDER BY id DESC";
 
 $stmt = $db->query("SELECT * FROM episodes $order_sql");
 $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -40,29 +42,23 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>✨ Professional Episode Manager Table</title>
+    <title>✨ Episode Manager</title>
     <style>
         :root { 
             --bg: #030712; --card: #0f172a; --border: rgba(255, 255, 255, 0.1);
             --primary: #8b5cf6; --accent: #06b6d4; --text: #f3f4f6; --muted: #9ca3af;
         }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
-        .wrapper { max-width: 1000px; margin: auto; }
-        .header { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 16px; }
-        h1 { margin: 0 0 4px 0; font-size: 20px; color: #fff; }
+        .wrapper { max-width: 1050px; margin: auto; }
         
-        .ribbon { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 10px; border: 1px solid var(--border); }
-        .ribbon-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 12px; }
-        .ribbon-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+        .search-input { width: 100%; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 14px; margin-bottom: 16px; box-sizing: border-box; }
+        .search-input:focus { outline: none; border-color: var(--primary); }
 
-        .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-        .search-input { flex-grow: 1; padding: 12px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 14px; }
-        .sort-select { padding: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 13px; font-weight: 600; }
-
-        /* Table Design */
         .table-responsive { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; white-space: nowrap; }
         th { background: rgba(15,23,42,0.95); color: var(--accent); padding: 14px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        th a { color: var(--accent); text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 5px; }
+        th a:hover { color: #fff; }
         td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: rgba(255,255,255,0.02); }
 
@@ -72,44 +68,39 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .status-pub { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.4); }
 
         .actions { display: flex; gap: 5px; }
-        .btn-act { padding: 6px 10px; font-size: 11px; border-radius: 6px; text-decoration: none; color: white; font-weight: 600; }
+        .btn-act { padding: 6px 10px; font-size: 11px; border-radius: 6px; text-decoration: none; color: white; font-weight: 600; cursor: pointer; border: none; }
         .bg-view { background: #059669; } .bg-edit { background: #d97706; } .bg-del { background: #dc2626; } .bg-copy { background: #8b5cf6; }
     </style>
 </head>
 <body>
     <div class="wrapper">
-        <div class="header">
-            <h1>🎬 Professional Studio Episode Manager</h1>
-            <div class="ribbon">
-                <a href="index.php" class="ribbon-btn">📊 Dashboard</a>
-                <a href="episodes.php" class="ribbon-btn active">🎬 Episodes</a>
-                <a href="add_edit.php" class="ribbon-btn">➕ Add Episode</a>
-                <a href="export_import.php" class="ribbon-btn">📂 Excel / Ribbon DB</a>
-            </div>
-        </div>
+        <?php include 'header.php'; ?>
 
-        <div class="toolbar">
-            <input type="text" id="searchBox" class="search-input" placeholder="🔍 Search series, season, title..." onkeyup="filterTable()">
-            <select class="sort-select" onchange="location = this.value;">
-                <option value="episodes.php?sort=target_asc" <?= $sort=='target_asc'?'selected':'' ?>>📅 Target Date (Upcoming)</option>
-                <option value="episodes.php?sort=target_desc" <?= $sort=='target_desc'?'selected':'' ?>>📅 Target Date (Latest)</option>
-                <option value="episodes.php?sort=az" <?= $sort=='az'?'selected':'' ?>>🔤 Title (A to Z)</option>
-                <option value="episodes.php?sort=za" <?= $sort=='za'?'selected':'' ?>>🔤 Title (Z to A)</option>
-                <option value="episodes.php?sort=recent" <?= $sort=='recent'?'selected':'' ?>>⏱️ Recently Added</option>
-            </select>
-        </div>
+        <input type="text" id="searchBox" class="search-input" placeholder="🔍 Search series, season, title..." onkeyup="filterTable()">
 
         <div class="table-responsive">
             <table id="epTable">
                 <thead>
                     <tr>
                         <th>Sr No</th>
-                        <th>Series Name</th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='series_asc')?'series_desc':'series_asc' ?>">
+                                Series Name <span><?= ($sort=='series_asc')?'↑':(($sort=='series_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
                         <th>Season</th>
                         <th>Ep No</th>
-                        <th>Episode Title</th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='title_asc')?'title_desc':'title_asc' ?>">
+                                Episode Title <span><?= ($sort=='title_asc')?'↑':(($sort=='title_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
                         <th>Status</th>
-                        <th>Target Upload Date</th>
+                        <th>
+                            <a href="episodes.php?sort=<?= ($sort=='target_asc')?'target_desc':'target_asc' ?>">
+                                Target Date <span><?= ($sort=='target_asc')?'↑':(($sort=='target_desc')?'↓':'↕') ?></span>
+                            </a>
+                        </th>
                         <th>Added Date</th>
                         <th>Actions</th>
                     </tr>
@@ -133,8 +124,8 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <td style="color: var(--muted); font-size: 11px;"><?= htmlspecialchars(substr($ep['created_at'], 0, 10)) ?></td>
                         <td>
                             <div class="actions">
-                                <a href="add_edit.php?action=view&id=<?= $ep['id'] ?>" class="btn-act bg-view" title="View & Copy">View</a>
-                                <button onclick="copyMetadata(<?= htmlspecialchars(json_encode($ep)) ?>)" class="btn-act bg-copy" title="Quick Copy All">Copy</button>
+                                <a href="add_edit.php?action=view&id=<?= $ep['id'] ?>" class="btn-act bg-view">View</a>
+                                <button onclick="copyMetadata(<?= htmlspecialchars(json_encode($ep)) ?>)" class="btn-act bg-copy">Copy</button>
                                 <a href="add_edit.php?action=edit&id=<?= $ep['id'] ?>" class="btn-act bg-edit">Edit</a>
                                 <a href="episodes.php?action=delete&id=<?= $ep['id'] ?>" class="btn-act bg-del" onclick="return confirm('Delete this episode?');">Del</a>
                             </div>
