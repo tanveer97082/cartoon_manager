@@ -121,7 +121,6 @@ def export_txt(id):
 
 if __name__ == '__main__':
     init_db()
-    # CLI Mode support: python app.py add "Ep" "Title" "YT Title" "Desc" "Tags" "Script" "Caption" "Status"
     if len(sys.argv) > 1 and sys.argv[1] == 'add':
         if len(sys.argv) < 5:
             print("Usage: python app.py add 'Ep_Num' 'Title' 'YT_Title' 'Desc' 'Tags' 'Script' 'Caption' 'Status'")
