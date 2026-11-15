@@ -4,7 +4,7 @@ $total = $db->query("SELECT COUNT(*) FROM episodes")->fetchColumn();
 $ready = $db->query("SELECT COUNT(*) FROM episodes WHERE status='Script Ready'")->fetchColumn();
 $prod = $db->query("SELECT COUNT(*) FROM episodes WHERE status='In Production'")->fetchColumn();
 $pub = $db->query("SELECT COUNT(*) FROM episodes WHERE status='Published'")->fetchColumn();
-$target_goal = 20; // Monthly production goal
+$target_goal = 20;
 $progress_pct = min(round(($pub / max($target_goal, 1)) * 100), 100);
 ?>
 <!doctype html>
@@ -12,7 +12,7 @@ $progress_pct = min(round(($pub / max($target_goal, 1)) * 100), 100);
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>✨ AI Cartoon Hub Pro - Command Center</title>
+    <title>✨ AI Cartoon Hub Pro - Dashboard</title>
     <style>
         :root { 
             --bg: #030712; --card: #0f172a; --border: rgba(255, 255, 255, 0.1);
@@ -20,14 +20,6 @@ $progress_pct = min(round(($pub / max($target_goal, 1)) * 100), 100);
         }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
         .wrapper { max-width: 950px; margin: auto; }
-        .header { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
-        h1 { margin: 0 0 4px 0; font-size: 20px; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .subtitle { font-size: 12px; color: var(--muted); }
-        
-        .ribbon { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 10px; border: 1px solid var(--border); }
-        .ribbon-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 12px; transition: 0.2s; }
-        .ribbon-btn:hover, .ribbon-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
-
         .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px; }
         @media(min-width: 650px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
         .stat-box { background: var(--card); border: 1px solid var(--border); padding: 16px; border-radius: 14px; text-align: center; }
@@ -35,9 +27,9 @@ $progress_pct = min(round(($pub / max($target_goal, 1)) * 100), 100);
         .stat-box .val { font-size: 24px; font-weight: 800; color: #fff; }
 
         .target-box { background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.15)); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 16px; }
-        .target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 14px; font-weight: 700; }
+        .target-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; font-weight: 700; flex-wrap: wrap; gap: 5px; }
         .progress-bar { background: rgba(255,255,255,0.08); height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #06b6d4); border-radius: 6px; transition: width 0.5s; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #8b5cf6, #06b6d4); border-radius: 6px; }
 
         .analytics-card { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; }
         .analytics-card h2 { margin: 0 0 14px 0; font-size: 15px; color: #fff; }
@@ -49,17 +41,7 @@ $progress_pct = min(round(($pub / max($target_goal, 1)) * 100), 100);
 </head>
 <body>
     <div class="wrapper">
-        <div class="header">
-            <h1>✨ AI Cartoon Hub Pro</h1>
-            <div class="subtitle">Enterprise Studio Analytics & Command Center</div>
-            
-            <div class="ribbon">
-                <a href="index.php" class="ribbon-btn active">📊 Dashboard</a>
-                <a href="episodes.php" class="ribbon-btn">🎬 Episode Manager</a>
-                <a href="add_edit.php" class="ribbon-btn">➕ Add Episode</a>
-                <a href="export_import.php" class="ribbon-btn">📂 Excel / Ribbon DB</a>
-            </div>
-        </div>
+        <?php include 'header.php'; ?>
 
         <div class="stats-grid">
             <div class="stat-box"><h3>Total Episodes</h3><div class="val"><?= $total ?></div></div>
