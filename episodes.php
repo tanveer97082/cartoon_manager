@@ -11,7 +11,7 @@ $id = $_GET['id'] ?? null;
 if ($action === 'delete' && $id) {
     $stmt = $db->prepare("DELETE FROM episodes WHERE id = ?");
     $stmt->execute([$id]);
-    header("Location: episodes.php");
+    header("Location: /episodes");
     exit;
 }
 
@@ -21,7 +21,7 @@ if (isset($_POST['bulk_action']) && $_POST['bulk_action'] === 'delete_selected' 
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $stmt = $db->prepare("DELETE FROM episodes WHERE id IN ($placeholders)");
     $stmt->execute($ids);
-    header("Location: episodes.php");
+    header("Location: /episodes");
     exit;
 }
 
