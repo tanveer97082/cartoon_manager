@@ -43,12 +43,6 @@ if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
         }
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
         .wrapper { max-width: 900px; margin: auto; }
-        .header { background: var(--card); border: 1px solid var(--border); padding: 20px; border-radius: 16px; margin-bottom: 16px; }
-        h1 { margin: 0 0 4px 0; font-size: 20px; color: #fff; }
-        
-        .ribbon { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 10px; border: 1px solid var(--border); }
-        .ribbon-btn { background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text); padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 12px; }
-        .ribbon-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
         
         .card-box { background: var(--card); border: 1px solid var(--border); padding: 22px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         h2 { margin-top: 0; font-size: 16px; color: #fff; }
@@ -60,15 +54,7 @@ if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
 </head>
 <body>
     <div class="wrapper">
-        <div class="header">
-            <h1>📂 Excel Ribbon & Database Engine</h1>
-            <div class="ribbon">
-                <a href="index.php" class="ribbon-btn">📊 Dashboard</a>
-                <a href="episodes.php" class="ribbon-btn">🎬 Episodes</a>
-                <a href="add_edit.php" class="ribbon-btn">➕ Add Episode</a>
-                <a href="export_import.php" class="ribbon-btn active">📂 Excel / Ribbon DB</a>
-            </div>
-        </div>
+        <?php include 'header.php'; ?>
 
         <?php if (!empty($msg)): ?>
             <div class="alert"><?= htmlspecialchars($msg) ?></div>
