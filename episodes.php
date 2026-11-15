@@ -1,4 +1,8 @@
 <?php
+// Turn off error display for clean CSV exports
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 require_once 'config.php';
 $action = $_GET['action'] ?? '';
 $id = $_GET['id'] ?? null;
@@ -21,25 +25,35 @@ if (isset($_POST['bulk_action']) && $_POST['bulk_action'] === 'delete_selected' 
     exit;
 }
 
-// Handle Export CSV Template Download
+// Handle Export CSV Template Download (Clean & Error-Free)
 if (isset($_GET['template'])) {
+    // Clear any output buffers to prevent HTML contamination
+    if (ob_get_level()) ob_end_clean();
+    
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=cartoon_import_template.csv');
+    
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['series_name', 'season_name', 'episode_num', 'title', 'yt_title', 'yt_desc', 'yt_tags', 'script', 'reels_tiktok_caption', 'thumbnail_prompt', 'status', 'target_date']);
-    fputcsv($out, ['Munki & Trunk', 'Season 1', 'S1E10', 'Sample Episode', 'Munki & Trunk | Sample | Episode 10', 'Description here...', 'tag1, tag2', 'Scene 1: ...', 'Viral caption 🐒', 'Thumbnail prompt here...', 'Script Ready', '2026-12-01']);
+    fputcsv($out, ['series_name', 'season_name', 'episode_num', 'title', 'yt_title', 'yt_desc', 'yt_tags', 'script', 'reels_tiktok_caption', 'thumbnail_prompt', 'status', 'target_date'], ',', '"', '\\');
+    fputcsv($out, ['Munki & Trunk', 'Season 1', 'S1E10', 'Sample Episode', 'Munki & Trunk | Sample | Episode 10', 'Description here...', 'tag1, tag2', 'Scene 1: ...', 'Viral caption 🐒', 'Thumbnail prompt here...', 'Script Ready', '2026-12-01'], ',', '"', '\\');
     fclose($out);
     exit;
 }
 
-// Handle Export All to CSV
+// Handle Export All to CSV (Clean & Error-Free)
 if (isset($_GET['export_csv'])) {
+    if (ob_get_level()) ob_end_clean();
+    
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename=cartoon_studio_database.csv');
+    
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['ID', 'Series Name', 'Season Name', 'Episode Num', 'Title', 'YouTube Title', 'Description', 'Tags', 'Script', 'Reels Caption', 'Thumbnail Prompt', 'Status', 'Target Date', 'Created At']);
+    fputcsv($out, ['ID', 'Series Name', 'Season Name', 'Episode Num', 'Title', 'YouTube Title', 'Description', 'Tags', 'Script', 'Reels Caption', 'Thumbnail Prompt', 'Status', 'Target Date', 'Created At'], ',', '"', '\\');
+    
     $rows = $db->query("SELECT * FROM episodes")->fetchAll(PDO::FETCH_ASSOC);
-    foreach ($rows as $r) { fputcsv($out, $r); }
+    foreach ($rows as $r) { 
+        fputcsv($out, $r, ',', '"', '\\'); 
+    }
     fclose($out);
     exit;
 }
@@ -49,12 +63,11 @@ $import_msg = "";
 if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
     $file = $_FILES['csv_file']['tmp_name'];
     if (($h = fopen($file, "r")) !== FALSE) {
-        $header = fgetcsv($h, 1000, ","); // skip header
+        $header = fgetcsv($h, 1000, ",", '"', '\\'); // skip header
         $stmt = $db->prepare("INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, thumbnail_prompt, status, target_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $count = 0;
-        while (($d = fgetcsv($h, 2000, ",")) !== FALSE) {
+        while (($d = fgetcsv($h, 2000, ",", '"', '\\')) !== FALSE) {
             if (count($d) >= 11) {
-                // Handle different CSV structures (with or without ID in col 0)
                 if (is_numeric($d[0])) {
                     $stmt->execute([$d[1], $d[2], $d[3], $d[4], $d[5], $d[6], $d[7], $d[8], $d[9], $d[10], $d[11] ?? 'Script Ready', $d[12] ?? date('Y-m-d')]);
                 } else {
@@ -123,7 +136,6 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .status-prod { background: rgba(217, 119, 6, 0.2); color: #fbbf24; border: 1px solid rgba(217, 119, 6, 0.4); }
         .status-pub { background: rgba(37, 99, 235, 0.2); color: #60a5fa; border: 1px solid rgba(37, 99, 235, 0.4); }
 
-        /* Action Dropdown Menu Styling */
         .dropdown { position: relative; display: inline-block; }
         .dropbtn { background: var(--primary); color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
         .dropdown-content { display: none; position: absolute; right: 0; background: #1e293b; min-width: 120px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 10; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
