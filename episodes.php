@@ -44,17 +44,22 @@ if (isset($_GET['export_csv'])) {
     exit;
 }
 
-// Handle CSV Import
+// Handle CSV Import (Proper Excel Comma/Quote Parser)
 $import_msg = "";
 if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
     $file = $_FILES['csv_file']['tmp_name'];
     if (($h = fopen($file, "r")) !== FALSE) {
-        fgetcsv($h); // skip header
+        $header = fgetcsv($h, 1000, ","); // skip header
         $stmt = $db->prepare("INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, thumbnail_prompt, status, target_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $count = 0;
-        while (($d = fgetcsv($h, 1000, ",")) !== FALSE) {
-            if (count($d) >= 12) {
-                $stmt->execute([$d[0], $d[1], $d[2], $d[3], $d[4], $d[5], $d[6], $d[7], $d[8], $d[9], $d[10], $d[11] ?? date('Y-m-d')]);
+        while (($d = fgetcsv($h, 2000, ",")) !== FALSE) {
+            if (count($d) >= 11) {
+                // Handle different CSV structures (with or without ID in col 0)
+                if (is_numeric($d[0])) {
+                    $stmt->execute([$d[1], $d[2], $d[3], $d[4], $d[5], $d[6], $d[7], $d[8], $d[9], $d[10], $d[11] ?? 'Script Ready', $d[12] ?? date('Y-m-d')]);
+                } else {
+                    $stmt->execute([$d[0], $d[1], $d[2], $d[3], $d[4], $d[5], $d[6], $d[7], $d[8], $d[9], $d[10] ?? 'Script Ready', $d[11] ?? date('Y-m-d')]);
+                }
                 $count++;
             }
         }
@@ -63,15 +68,22 @@ if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] == 0) {
     }
 }
 
-// Sorting logic
+// Sorting logic with arrows
 $sort = $_GET['sort'] ?? 'target_asc';
 $order_sql = "ORDER BY target_date ASC";
 if ($sort === 'series_asc') $order_sql = "ORDER BY series_name ASC";
 elseif ($sort === 'series_desc') $order_sql = "ORDER BY series_name DESC";
+elseif ($sort === 'season_asc') $order_sql = "ORDER BY season_name ASC";
+elseif ($sort === 'season_desc') $order_sql = "ORDER BY season_name DESC";
+elseif ($sort === 'ep_asc') $order_sql = "ORDER BY episode_num ASC";
+elseif ($sort === 'ep_desc') $order_sql = "ORDER BY episode_num DESC";
 elseif ($sort === 'title_asc') $order_sql = "ORDER BY title ASC";
 elseif ($sort === 'title_desc') $order_sql = "ORDER BY title DESC";
+elseif ($sort === 'status_asc') $order_sql = "ORDER BY status ASC";
+elseif ($sort === 'status_desc') $order_sql = "ORDER BY status DESC";
 elseif ($sort === 'target_desc') $order_sql = "ORDER BY target_date DESC";
-elseif ($sort === 'recent') $order_sql = "ORDER BY id DESC";
+elseif ($sort === 'added_asc') $order_sql = "ORDER BY created_at ASC";
+elseif ($sort === 'added_desc') $order_sql = "ORDER BY created_at DESC";
 
 $stmt = $db->query("SELECT * FROM episodes $order_sql");
 $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -91,7 +103,7 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .wrapper { max-width: 1100px; margin: auto; }
         
         .toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-        .search-input { flex-grow: 1; padding: 11px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 14px; min-width: 220px; }
+        .search-input { flex-grow: 1; padding: 11px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 14px; min-width: 200px; }
         .search-input:focus { outline: none; border-color: var(--primary); }
 
         .toolbar-btns { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -120,6 +132,7 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
         .dropdown:hover .dropdown-content { display: block; }
 
         .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid rgba(5, 150, 105, 0.4); color: #34d399; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
+        #deleteBtn:disabled { opacity: 0.4; cursor: not-allowed; background: rgba(220,38,38,0.05); border-color: rgba(220,38,38,0.1); color: var(--muted); }
     </style>
 </head>
 <body>
@@ -136,7 +149,7 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <div class="toolbar">
                 <input type="text" id="searchBox" class="search-input" placeholder="🔍 Search series, season, title..." onkeyup="filterTable()">
                 <div class="toolbar-btns">
-                    <button type="submit" onclick="submitBulk('delete_selected')" class="tool-btn" style="background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.4); color: #f87171;">🗑️ Delete Selected</button>
+                    <button type="submit" id="deleteBtn" onclick="submitBulk('delete_selected')" class="tool-btn" style="background: rgba(220,38,38,0.2); border-color: rgba(220,38,38,0.4); color: #f87171;" disabled>🗑️ Delete Selected</button>
                     <a href="episodes.php?template=true" class="tool-btn">📄 Template CSV</a>
                     <a href="episodes.php?export_csv=true" class="tool-btn">📥 Export CSV</a>
                     <label class="tool-btn" style="cursor: pointer;">
@@ -156,27 +169,43 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                     Series Name <span><?= ($sort=='series_asc')?'↑':(($sort=='series_desc')?'↓':'↕') ?></span>
                                 </a>
                             </th>
-                            <th>Season</th>
-                            <th>Ep No</th>
+                            <th>
+                                <a href="episodes.php?sort=<?= ($sort=='season_asc')?'season_desc':'season_asc' ?>">
+                                    Season <span><?= ($sort=='season_asc')?'↑':(($sort=='season_desc')?'↓':'↕') ?></span>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="episodes.php?sort=<?= ($sort=='ep_asc')?'ep_desc':'ep_asc' ?>">
+                                    Ep No <span><?= ($sort=='ep_asc')?'↑':(($sort=='ep_desc')?'↓':'↕') ?></span>
+                                </a>
+                            </th>
                             <th>
                                 <a href="episodes.php?sort=<?= ($sort=='title_asc')?'title_desc':'title_asc' ?>">
                                     Episode Title <span><?= ($sort=='title_asc')?'↑':(($sort=='title_desc')?'↓':'↕') ?></span>
                                 </a>
                             </th>
-                            <th>Status</th>
+                            <th>
+                                <a href="episodes.php?sort=<?= ($sort=='status_asc')?'status_desc':'status_asc' ?>">
+                                    Status <span><?= ($sort=='status_asc')?'↑':(($sort=='status_desc')?'↓':'↕') ?></span>
+                                </a>
+                            </th>
                             <th>
                                 <a href="episodes.php?sort=<?= ($sort=='target_asc')?'target_desc':'target_asc' ?>">
                                     Target Date <span><?= ($sort=='target_asc')?'↑':(($sort=='target_desc')?'↓':'↕') ?></span>
                                 </a>
                             </th>
-                            <th>Added Date</th>
+                            <th>
+                                <a href="episodes.php?sort=<?= ($sort=='added_asc')?'added_desc':'added_asc' ?>">
+                                    Added Date <span><?= ($sort=='added_asc')?'↑':(($sort=='added_desc')?'↓':'↕') ?></span>
+                                </a>
+                            </th>
                             <th style="text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($episodes): $sr = 1; foreach ($episodes as $ep): ?>
                         <tr class="ep-row" data-search="<?= htmlspecialchars(strtolower($ep['series_name'].' '.$ep['season_name'].' '.$ep['episode_num'].' '.$ep['title'])) ?>">
-                            <td><input type="checkbox" name="selected_ids[]" value="<?= $ep['id'] ?>"></td>
+                            <td><input type="checkbox" name="selected_ids[]" value="<?= $ep['id'] ?>" onclick="checkSelection()"></td>
                             <td><strong><?= $sr++ ?></strong></td>
                             <td><span style="color: var(--accent); font-weight:650;"><?= htmlspecialchars($ep['series_name']) ?></span></td>
                             <td><?= htmlspecialchars($ep['season_name']) ?></td>
@@ -221,8 +250,16 @@ $episodes = $stmt->fetchAll(PDO::FETCH_ASSOC);
             }
         }
         function toggleAll(source) {
-            checkboxes = document.getElementsByName('selected_ids[]');
+            let checkboxes = document.getElementsByName('selected_ids[]');
             for(let cb of checkboxes) { cb.checked = source.checked; }
+            checkSelection();
+        }
+        function checkSelection() {
+            let checkboxes = document.getElementsByName('selected_ids[]');
+            let checkedCount = 0;
+            for(let cb of checkboxes) { if(cb.checked) checkedCount++; }
+            let delBtn = document.getElementById('deleteBtn');
+            delBtn.disabled = (checkedCount === 0);
         }
         function submitBulk(action) {
             document.getElementById('bulkActionInput').value = action;
