@@ -1,4 +1,8 @@
 <?php
+// Turn off error display for clean operations
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
+
 require_once 'config.php';
 $action = $_GET['action'] ?? 'add';
 $id = $_GET['id'] ?? null;
@@ -25,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare("INSERT INTO episodes (series_name, season_name, episode_num, title, yt_title, yt_desc, yt_tags, script, reels_tiktok_caption, thumbnail_prompt, status, target_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([$series, $season, $ep_num, $title, $yt_title, $yt_desc, $yt_tags, $script, $caption, $thumb, $status, $target_date]);
     }
-    header("Location: /add_edit");
+    header("Location: /episodes");
     exit;
 }
 
@@ -75,7 +79,6 @@ if ($id) {
                         <span style="font-size: 11px; color: var(--accent); font-weight: 700; text-transform: uppercase;"><?= htmlspecialchars($item['series_name']) ?> | <?= htmlspecialchars($item['season_name']) ?></span>
                         <h2 style="margin:2px 0 0 0; color: #fff;"><?= htmlspecialchars($item['episode_num']) ?> - <?= htmlspecialchars($item['title']) ?></h2>
                     </div>
-                    <a href="episodes.php?action=export_txt&id=<?= $item['id'] ?>" style="background:#2563eb; padding:8px 14px; border-radius:8px; text-decoration:none; font-weight:600; color:#fff; font-size:13px;">📥 Export txt</a>
                 </div>
                 <button class="bulk-btn" onclick="copyAll()">🚀 Copy All Metadata (All-in-One)</button>
                 
@@ -95,7 +98,7 @@ if ($id) {
                 </script>
             <?php else: ?>
                 <h2><?= $item ? 'Edit Episode' : 'Add New Episode' ?></h2>
-                <form method="POST" action="add_edit.php">
+                <form method="POST" action="/add_edit">
                     <input type="hidden" name="id" value="<?= $item['id'] ?? '' ?>">
                     <div class="form-group"><label>Series Name</label><input type="text" name="series_name" value="<?= htmlspecialchars($item['series_name'] ?? 'Munki & Trunk') ?>" required></div>
                     <div class="form-group"><label>Season Name</label><input type="text" name="season_name" value="<?= htmlspecialchars($item['season_name'] ?? 'Season 1') ?>" required></div>
