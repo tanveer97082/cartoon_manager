@@ -29,7 +29,7 @@ if (isset($_GET['delete_id'])) {
     exit;
 }
 
-// Handle Bulk Actions from Dropdown Menu (Delete Selected / Export Selected)
+// Handle Bulk Actions from Dropdown Menu
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
     if (!empty($_POST['selected_ids'])) {
         $ids = $_POST['selected_ids'];
@@ -141,43 +141,46 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 12px; }
         .wrapper { max-width: 100%; width: 100%; box-sizing: border-box; margin: auto; }
         
-        .excel-ribbon { background: var(--card); border: 1px solid var(--border); padding: 14px; border-radius: 14px; margin-bottom: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .ribbon-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .excel-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .excel-ribbon { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 18px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); display: flex; flex-direction: column; gap: 14px; }
+        .ribbon-top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .ribbon-bottom { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        
+        .grid-title { font-weight: 800; color: #fff; font-size: 16px; display: flex; align-items: center; gap: 6px; letter-spacing: 0.3px; }
+        .search-input { padding: 10px 14px; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px; color: #fff; font-size: 13px; width: 100%; max-width: 260px; }
+        .search-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(139,92,246,0.3); }
+
+        .excel-btn { background: rgba(255,255,255,0.06); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
         .excel-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
-        .btn-save { background: linear-gradient(135deg, #059669, #10b981); border-color: #059669; color: white; }
+        .btn-save { background: linear-gradient(135deg, #059669, #10b981); border-color: #059669; color: white; box-shadow: 0 4px 15px rgba(16,185,129,0.3); }
 
-        .search-input { padding: 9px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 13px; width: 180px; }
-        .search-input:focus { outline: none; border-color: var(--primary); }
-
-        .spreadsheet-container { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 75vh; }
+        .spreadsheet-container { background: var(--card); border: 1px solid var(--border); border-radius: 18px; overflow-x: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); max-height: 72vh; }
         table { width: max-content; border-collapse: collapse; text-align: left; font-size: 13px; }
-        th { background: rgba(15,23,42,0.95); color: var(--accent); padding: 12px 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
-        th a { color: var(--accent); text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        th { background: rgba(15,23,42,0.95); color: var(--accent); padding: 14px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 10; white-space: nowrap; }
+        th a { color: var(--accent); text-decoration: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
         th a:hover { color: #fff; }
-        td { padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
         tr:hover { background: rgba(255,255,255,0.02); }
 
-        .cell-input { width: 180px; background: rgba(0,0,0,0.3); border: 1px solid transparent; color: var(--text); padding: 7px 10px; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
-        .cell-input:focus { outline: none; background: rgba(15,23,42,0.9); border-color: var(--primary); width: 260px; }
+        .cell-input { width: 180px; background: rgba(0,0,0,0.35); border: 1px solid transparent; color: var(--text); padding: 8px 10px; border-radius: 8px; font-size: 13px; box-sizing: border-box; }
+        .cell-input:focus { outline: none; background: rgba(15,23,42,0.95); border-color: var(--primary); width: 260px; box-shadow: 0 0 10px rgba(139,92,246,0.3); }
 
-        /* Action Dropdown Menu (Fixed Overlap & No Sticky Action Column) */
+        /* Action Dropdown Menu */
         .dropdown { position: relative; display: inline-block; }
-        .dropbtn { background: var(--primary); color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .dropdown-content { display: none; position: absolute; right: 0; background: #1e293b; min-width: 160px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .dropdown-content a, .dropdown-content button { color: var(--text); padding: 9px 14px; text-decoration: none; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+        .dropbtn { background: var(--primary); color: white; padding: 7px 14px; font-size: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
+        .dropdown-content { display: none; position: absolute; right: 0; background: #1e293b; min-width: 160px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .dropdown-content a, .dropdown-content button { color: var(--text); padding: 10px 14px; text-decoration: none; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
         .dropdown-content a:hover, .dropdown-content button:hover { background: var(--primary); color: #fff; }
         .dropdown:hover .dropdown-content { display: block; }
 
         .batch-actions-menu { position: relative; display: inline-block; }
-        .batch-btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
-        .batch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .batch-content { display: none; position: absolute; left: 0; background: #1e293b; min-width: 150px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .batch-content button { color: var(--text); padding: 9px 14px; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+        .batch-btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px rgba(139,92,246,0.3); }
+        .batch-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+        .batch-content { display: none; position: absolute; left: 0; background: #1e293b; min-width: 150px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .batch-content button { color: var(--text); padding: 10px 14px; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
         .batch-content button:hover { background: var(--primary); color: #fff; }
         .batch-actions-menu:hover .batch-content { display: block; }
 
-        .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid rgba(5, 150, 105, 0.4); color: #34d399; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
+        .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid rgba(5, 150, 105, 0.4); color: #34d399; padding: 12px; border-radius: 10px; margin-bottom: 16px; font-size: 13px; font-weight: 600; }
     </style>
 </head>
 <body>
@@ -192,14 +195,13 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
             <input type="hidden" name="bulk_action" id="bulkActionInput" value="">
 
             <div class="excel-ribbon">
-                <div class="ribbon-group">
-                    <span style="font-weight: 700; color: #fff; font-size: 14px;">📊 Excel Studio Grid</span>
+                <div class="ribbon-top">
+                    <div class="grid-title">📊 Excel Studio Grid</div>
                     <input type="text" id="gridSearch" class="search-input" placeholder="🔍 Quick search grid..." onkeyup="filterGrid()">
                 </div>
-                <div class="ribbon-group">
+                <div class="ribbon-bottom">
                     <button type="submit" name="save_all_columns" class="excel-btn btn-save">💾 Save All Changes</button>
                     
-                    <!-- Batch Actions Dropdown (Enabled only when checkbox selected) -->
                     <div class="batch-actions-menu">
                         <button type="button" id="batchBtn" class="batch-btn" disabled>⚙️ Batch Actions ▾</button>
                         <div class="batch-content">
@@ -275,7 +277,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         </form>
     </div>
 
-    <!-- Modals for Add Row / Add Column -->
+    <!-- Modals -->
     <div id="addRowModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
         <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:400px;">
             <h2 style="margin-top:0; color:#fff; font-size:18px;">➕ Insert New Row</h2>
