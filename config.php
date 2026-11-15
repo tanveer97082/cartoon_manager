@@ -20,7 +20,9 @@ try {
         script TEXT,
         reels_tiktok_caption TEXT,
         thumbnail_prompt TEXT,
-        status TEXT DEFAULT 'Script Ready'
+        status TEXT DEFAULT 'Script Ready',
+        target_date TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
 } catch (PDOException $e) {
     die("Database Error: " . $e->getMessage());
