@@ -255,9 +255,28 @@ if ($action === 'export' && $id) {
         </div>
     </div>
 
-    <script>
+      <script>
         function openModal() { document.getElementById('addModal').style.display = 'flex'; }
         function closeModal() { document.getElementById('addModal').style.display = 'none'; }
         window.onclick = function(event) {
             let modal = document.getElementById('addModal');
-            if (event.target == modal) 
+            if (event.target == modal) { modal.style.display = "none"; }
+        }
+        function copyText(id) {
+            navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert('✨ Copied to clipboard!'));
+        }
+        function copyAllData() {
+            let text = `=== YOUTUBE TITLE ===\n${document.getElementById('yt_t').innerText}\n\n=== DESCRIPTION ===\n${document.getElementById('yt_d').innerText}\n\n=== TAGS ===\n${document.getElementById('yt_tag').innerText}\n\n=== SCRIPT ===\n${document.getElementById('scr').innerText}\n\n=== REELS CAPTION ===\n${document.getElementById('cap').innerText}\n\n=== THUMBNAIL PROMPT ===\n${document.getElementById('thumb').innerText}`;
+            navigator.clipboard.writeText(text).then(() => alert('🚀 All Metadata Copied Successfully!'));
+        }
+        function filterEpisodes() {
+            let input = document.getElementById('searchBox').value.toLowerCase();
+            let cards = document.getElementsByClassName('episode-card');
+            for (let c of cards) {
+                let text = c.getAttribute('data-text').toLowerCase();
+                c.style.display = text.includes(input) ? "flex" : "none";
+            }
+        }
+    </script>
+</body>
+</html>
