@@ -179,6 +179,10 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         .batch-content button:hover { background: var(--primary); color: #fff; }
         .batch-actions-menu:hover .batch-content { display: block; }
 
+        /* Responsive Modal Fix */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:9999; padding: 16px; box-sizing: border-box; }
+        .modal-box { background:#1e293b; padding:24px; border-radius:18px; border:1px solid var(--border); width:100%; max-width:420px; max-height:85vh; overflow-y:auto; box-shadow: 0 15px 40px rgba(0,0,0,0.8); }
+
         .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid rgba(5, 150, 105, 0.4); color: #34d399; padding: 12px; border-radius: 10px; margin-bottom: 16px; font-size: 13px; font-weight: 600; }
     </style>
 </head>
@@ -281,34 +285,34 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         </form>
     </div>
 
-    <!-- Modals -->
-    <div id="addRowModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
-        <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:400px;">
-            <h2 style="margin-top:0; color:#fff; font-size:18px;">➕ Insert New Row</h2>
+    <!-- Fully Responsive Modals -->
+    <div id="addRowModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="margin-top:0; color:#fff; font-size:18px; margin-bottom: 16px;">➕ Insert New Row</h2>
             <form method="POST">
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SERIES NAME</label><input type="text" name="new_series" value="Munki & Trunk" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SEASON NAME</label><input type="text" name="new_season" value="Season 1" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 10px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE NUMBER</label><input type="text" name="new_ep" placeholder="S1E5" class="cell-input" style="width:100%;" required></div>
-                <div style="margin-bottom: 16px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE TITLE</label><input type="text" name="new_title" placeholder="Title" class="cell-input" style="width:100%;" required></div>
+                <div style="margin-bottom: 12px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SERIES NAME</label><input type="text" name="new_series" value="Munki & Trunk" class="cell-input" style="width:100%; margin-top:4px;" required></div>
+                <div style="margin-bottom: 12px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">SEASON NAME</label><input type="text" name="new_season" value="Season 1" class="cell-input" style="width:100%; margin-top:4px;" required></div>
+                <div style="margin-bottom: 12px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE NUMBER</label><input type="text" name="new_ep" placeholder="S1E5" class="cell-input" style="width:100%; margin-top:4px;" required></div>
+                <div style="margin-bottom: 20px;"><label style="font-size:11px; color:var(--accent); font-weight:700;">EPISODE TITLE</label><input type="text" name="new_title" placeholder="Title" class="cell-input" style="width:100%; margin-top:4px;" required></div>
                 <div style="display:flex; gap:10px;">
-                    <button type="submit" name="add_row" class="excel-btn btn-save" style="flex:1; justify-content:center; height:40px;">Insert Row</button>
-                    <button type="button" onclick="document.getElementById('addRowModal').style.display='none';" class="icon-btn" style="width:auto; padding:0 16px; background:rgba(255,255,255,0.1); font-size:13px; font-weight:600;">Cancel</button>
+                    <button type="submit" name="add_row" class="excel-btn btn-save" style="flex:1; justify-content:center; height:42px;">Insert Row</button>
+                    <button type="button" onclick="document.getElementById('addRowModal').style.display='none';" class="icon-btn" style="width:auto; padding:0 20px; background:rgba(255,255,255,0.1); font-size:13px; font-weight:600; height:42px;">Cancel</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="addColumnModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(3,7,18,0.85); backdrop-filter:blur(5px); align-items:center; justify-content:center; z-index:100;">
-        <div style="background:#1e293b; padding:24px; border-radius:16px; border:1px solid var(--border); width:100%; max-width:400px;">
-            <h2 style="margin-top:0; color:#fff; font-size:18px;">⚙️ Add Database Column</h2>
+    <div id="addColumnModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 style="margin-top:0; color:#fff; font-size:18px; margin-bottom: 16px;">⚙️ Add Database Column</h2>
             <form method="POST">
-                <div style="margin-bottom: 16px;">
+                <div style="margin-bottom: 20px;">
                     <label style="font-size:11px; color:var(--accent); font-weight:700;">COLUMN NAME (e.g. voice_artist)</label>
                     <input type="text" name="column_name" placeholder="column_name" class="cell-input" style="width:100%; margin-top:6px;" required>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button type="submit" name="add_column" class="excel-btn btn-save" style="flex:1; justify-content:center; height:40px;">Create Column</button>
-                    <button type="button" onclick="document.getElementById('addColumnModal').style.display='none';" class="icon-btn" style="width:auto; padding:0 16px; background:rgba(255,255,255,0.1); font-size:13px; font-weight:600;">Cancel</button>
+                    <button type="submit" name="add_column" class="excel-btn btn-save" style="flex:1; justify-content:center; height:42px;">Create Column</button>
+                    <button type="button" onclick="document.getElementById('addColumnModal').style.display='none';" class="icon-btn" style="width:auto; padding:0 20px; background:rgba(255,255,255,0.1); font-size:13px; font-weight:600; height:42px;">Cancel</button>
                 </div>
             </form>
         </div>
