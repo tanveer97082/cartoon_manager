@@ -29,7 +29,7 @@ if (isset($_GET['delete_id'])) {
     exit;
 }
 
-// Handle Bulk Actions (Delete Selected or Export Selected)
+// Handle Bulk Actions from Dropdown Menu (Delete Selected / Export Selected)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bulk_action'])) {
     if (!empty($_POST['selected_ids'])) {
         $ids = $_POST['selected_ids'];
@@ -146,7 +146,6 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         .excel-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
         .excel-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
         .btn-save { background: linear-gradient(135deg, #059669, #10b981); border-color: #059669; color: white; }
-        .btn-action:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .search-input { padding: 9px 12px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-size: 13px; width: 180px; }
         .search-input:focus { outline: none; border-color: var(--primary); }
@@ -162,13 +161,21 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
         .cell-input { width: 180px; background: rgba(0,0,0,0.3); border: 1px solid transparent; color: var(--text); padding: 7px 10px; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
         .cell-input:focus { outline: none; background: rgba(15,23,42,0.9); border-color: var(--primary); width: 260px; }
 
-        /* Action Dropdown Menu */
+        /* Action Dropdown Menu (Fixed Overlap & No Sticky Action Column) */
         .dropdown { position: relative; display: inline-block; }
         .dropbtn { background: var(--primary); color: white; padding: 6px 12px; font-size: 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .dropdown-content { display: none; position: absolute; right: 0; background: #1e293b; min-width: 140px; box-shadow: 0px 8px 16px rgba(0,0,0,0.5); z-index: 20; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .dropdown-content a, .dropdown-content button { color: var(--text); padding: 8px 12px; text-decoration: none; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+        .dropdown-content { display: none; position: absolute; right: 0; background: #1e293b; min-width: 160px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .dropdown-content a, .dropdown-content button { color: var(--text); padding: 9px 14px; text-decoration: none; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
         .dropdown-content a:hover, .dropdown-content button:hover { background: var(--primary); color: #fff; }
         .dropdown:hover .dropdown-content { display: block; }
+
+        .batch-actions-menu { position: relative; display: inline-block; }
+        .batch-btn { background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 12px; cursor: pointer; }
+        .batch-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .batch-content { display: none; position: absolute; left: 0; background: #1e293b; min-width: 150px; box-shadow: 0px 10px 25px rgba(0,0,0,0.8); z-index: 999; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .batch-content button { color: var(--text); padding: 9px 14px; display: block; font-size: 12px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; }
+        .batch-content button:hover { background: var(--primary); color: #fff; }
+        .batch-actions-menu:hover .batch-content { display: block; }
 
         .alert { background: rgba(5, 150, 105, 0.2); border: 1px solid rgba(5, 150, 105, 0.4); color: #34d399; padding: 10px; border-radius: 8px; margin-bottom: 14px; font-size: 13px; font-weight: 600; }
     </style>
@@ -191,8 +198,16 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                 </div>
                 <div class="ribbon-group">
                     <button type="submit" name="save_all_columns" class="excel-btn btn-save">💾 Save All Changes</button>
-                    <button type="submit" id="batchDelBtn" onclick="submitBulk('delete_selected')" class="excel-btn btn-action" style="background:rgba(220,38,38,0.2); color:#f87171; border-color:rgba(220,38,38,0.4);" disabled>🗑️ Delete Selected</button>
-                    <button type="submit" id="batchExpBtn" onclick="submitBulk('export_selected')" class="excel-btn btn-action" disabled>📥 Export Selected</button>
+                    
+                    <!-- Batch Actions Dropdown (Enabled only when checkbox selected) -->
+                    <div class="batch-actions-menu">
+                        <button type="button" id="batchBtn" class="batch-btn" disabled>⚙️ Batch Actions ▾</button>
+                        <div class="batch-content">
+                            <button type="submit" onclick="submitBulk('delete_selected')" style="color:#f87171;">🗑️ Delete Selected</button>
+                            <button type="submit" onclick="submitBulk('export_selected')">📥 Export Selected</button>
+                        </div>
+                    </div>
+
                     <a href="#" onclick="event.preventDefault(); document.getElementById('addRowModal').style.display='flex';" class="excel-btn">➕ Insert Row</a>
                     <a href="#" onclick="event.preventDefault(); document.getElementById('addColumnModal').style.display='flex';" class="excel-btn">⚙️ Add Column</a>
                 </div>
@@ -213,7 +228,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                                 </a>
                             </th>
                             <?php endforeach; ?>
-                            <th style="text-align: right; position: sticky; right: 0; background: #0f172a;">Action</th>
+                            <th style="text-align: right;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -240,7 +255,7 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
                                 <?php endif; ?>
                             </td>
                             <?php endforeach; ?>
-                            <td style="text-align: right; position: sticky; right: 0; background: #0f172a;">
+                            <td style="text-align: right;">
                                 <div class="dropdown">
                                     <button type="button" class="dropbtn">Actions ▾</button>
                                     <div class="dropdown-content">
@@ -311,10 +326,8 @@ $rows = $db->query("SELECT * FROM episodes $order_sql")->fetchAll(PDO::FETCH_ASS
             let checkboxes = document.getElementsByName('selected_ids[]');
             let checkedCount = 0;
             for(let cb of checkboxes) { if(cb.checked) checkedCount++; }
-            let delBtn = document.getElementById('batchDelBtn');
-            let expBtn = document.getElementById('batchExpBtn');
-            delBtn.disabled = (checkedCount === 0);
-            expBtn.disabled = (checkedCount === 0);
+            let batchBtn = document.getElementById('batchBtn');
+            batchBtn.disabled = (checkedCount === 0);
         }
         function submitBulk(action) {
             document.getElementById('bulkActionInput').value = action;
