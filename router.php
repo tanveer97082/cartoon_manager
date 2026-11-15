@@ -1,29 +1,25 @@
 <?php
-$uri = urldecode(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// Static files (CSS, JS, images) ko waise hi serve karein agar exist karte hain
-if ($uri !== '/' && file_exists(__DIR__ . $uri) && !is_dir(__DIR__ . $uri)) {
-    return false;
-}
+// Remove trailing slash if present
+$uri = rtrim($uri, '/');
 
-// Root URL par index.php load karein
-if ($uri === '/' || $uri === '/index') {
+if ($uri === '' || $uri === '/index') {
     include __DIR__ . '/index.php';
-    return true;
+    exit;
 }
 
-// Bina .php ke clean URLs ko map karein (jaise /episodes -> episodes.php)
 $file = __DIR__ . $uri . '.php';
 if (file_exists($file)) {
     include $file;
-    return true;
+    exit;
 }
 
-// Agar file direct match ho jaye
-if (file_exists(__DIR__ . $uri)) {
+// Fallback for static assets or 404
+$static_file = __DIR__ . $uri;
+if (file_exists($static_file) && !is_dir($static_file)) {
     return false;
 }
 
-// 404 Not Found
 http_response_code(404);
 echo "404 Page Not Found";
